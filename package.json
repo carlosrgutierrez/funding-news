@@ -1,0 +1,25 @@
+{
+  "name": "startup-news",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "login": "tsx src/cli.ts login",
+    "preview": "tsx src/cli.ts preview",
+    "post": "tsx src/cli.ts post",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "setup": "npm install && npx playwright install --with-deps chromium"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "fast-xml-parser": "^4.5.1",
+    "playwright": "^1.49.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
