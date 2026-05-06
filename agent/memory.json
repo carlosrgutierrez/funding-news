@@ -1,71 +1,107 @@
 {
   "processed_urls": [
-    "https://techcrunch.com/2026/05/06/khosla-backed-robotics-startup-genesis-ai-has-gone-full-stack-demo-shows/",
-    "https://news.ycombinator.com/item?id=47388387",
-    "https://www.reddit.com/r/startups/comments/1t5l5zw/seeking_advice_earlystage_neurotech_startup_h1b/",
-    "https://www.reddit.com/r/venturecapital/comments/1sd3az9/raising_1_million_euros_for_our_preseed/",
-    "https://www.reddit.com/r/startups/comments/1t5eodh/best_method_to_prep_for_investor_pitchescalls/",
-    "https://news.ycombinator.com/item?id=47267559",
+    "https://www.eu-startups.com/2026/05/paris-based-lithosquare-raises-e21-4-million-to-accelerate-transition-critical-mineral-discovery-with-geology-ai/",
     "https://www.cnbc.com/2026/04/27/deepmind-ineffable-intelligence-record-seed-funding-nvidia-google.html",
-    "https://techcrunch.com/2026/04/30/legal-ai-startup-legora-hits-5-6-valuation-and-its-battle-with-harvey-just-got-hotter/",
-    "https://www.reddit.com/r/venturecapital/comments/1s43s3e/i_built_a_dashboard_for_academic_research_on/",
-    "https://www.reddit.com/r/venturecapital/comments/1s1g2wf/air_street_capital_closes_232m_fund_iii_nathan/",
-    "https://www.reddit.com/r/venturecapital/comments/1s4fejs/looking_for_angel_inv_opportunities_for/",
-    "https://www.reddit.com/r/venturecapital/comments/1sivvvu/does_my_company_have_a_chance_of_raising_250k/",
+    "https://www.bloomberg.com/news/articles/2026-03-10/yann-lecun-s-new-ai-startup-raises-1-billion-in-seed-funding",
+    "https://news.ycombinator.com/item?id=47865757",
+    "https://www.eu-startups.com/2026/05/germanys-eleqtron-raises-e57-million-series-a-to-scale-quantum-computing-systems-for-industrial-applications/",
+    "https://www.eu-startups.com/2026/05/south-tyrols-profitize-raises-e1-4-million-to-scale-ai-powered-financial-planning-for-the-hospitality-sector/",
+    "https://www.eu-startups.com/2026/05/french-ai-real-estate-startup-davis-raises-e4-6-million-and-unveils-gaudi-1-for-automated-architectural-generation/",
+    "https://www.eu-startups.com/2026/05/spains-humara-raises-e1-2-million-to-cut-waste-plant-design-cycles-from-months-to-days-with-ai-saas/",
+    "https://news.crunchbase.com/venture/global-startup-funding-april-2026-anthropic-jeff-bezos-project-prometheus-biggest-deals/",
+    "https://sifted.eu/articles/y-combinator-alum-moritz-raises-9m/",
     "https://news.ycombinator.com/item?id=47278980",
-    "https://www.reddit.com/r/venturecapital/comments/1snmfln/vcmarketers_what_is_the_next_explosive_vertical/",
-    "https://news.ycombinator.com/item?id=47726833",
-    "https://www.reddit.com/r/venturecapital/comments/1swf4ax/building_arai_lighting_system_looking_for_preseed/",
-    "https://www.joinloopback.com/",
-    "https://hooked.news/",
-    "https://www.reddit.com/r/venturecapital/comments/1sqqk93/raising_2_million_preseed_for_polar_ace/",
+    "https://techcrunch.com/2026/04/30/legal-ai-startup-legora-hits-5-6-valuation-and-its-battle-with-harvey-just-got-hotter/",
+    "https://news.crunchbase.com/ai/blitzy-funding-valuation-autonomous-software-development-vibe-coding-startups/",
+    "https://sifted.eu/articles/lithosquare-critical-metals-fundraise/",
+    "https://news.ycombinator.com/item?id=47388387",
+    "https://www.eu-startups.com/2026/05/waiv-robotics-emerges-from-stealth-with-e6-4-million-to-develop-autonomous-uav-landing-infrastructure/",
+    "https://news.ycombinator.com/item?id=47267559",
+    "https://sifted.eu/articles/qutwo-hugging-face-legora-funding-round/",
+    "https://techcrunch.com/2026/05/06/khosla-backed-robotics-startup-genesis-ai-has-gone-full-stack-demo-shows/",
+    "https://techcrunch.com/2026/05/06/ethos-raises-22-75m-from-a16z-for-its-expert-network-with-voice-onboarding/",
     "https://techcrunch.com/2026/04/30/y-combinator-alum-skio-sells-for-105m-cash-only-raised-8m-founder-says/",
-    "https://news.ycombinator.com/item?id=47213310",
+    "https://news.crunchbase.com/seed/us-startup-venture-funding-boom-concentration-bay-area/",
+    "https://news.crunchbase.com/venture/biggest-funding-rounds-defense-aerospace-ai-fintech/",
+    "https://news.crunchbase.com/venture/supabase-startup-investment-dreambase-ai-felicis/",
+    "https://news.ycombinator.com/item?id=47718079",
     "https://sylixide.com",
-    "https://www.opc.community/funding",
-    "https://www.bloomberg.com/news/articles/2026-03-10/yann-lecun-s-new-ai-startup-raises-1-billion-in-seed-funding"
+    "https://venturebeat.com/technology/miami-startup-subquadratic-claims-1-000x-ai-efficiency-gain-with-subq-model-researchers-demand-independent-proof",
+    "https://www.eu-startups.com/2026/05/swiss-startup-moonlight-ai-raises-e2-8-million-to-turn-routine-blood-and-cytology-imaging-into-genomic-insights/",
+    "https://venturebeat.com/technology/ai-agents-are-missing-all-the-discussions-your-team-is-having-sageox-has-an-answer-agentic-context-infrastructure",
+    "https://sifted.eu/articles/groove-quantum-16m-seed/"
   ],
   "blacklist_domains": [],
   "last_7_reports": [
     {
-      "name": "Ineffable",
-      "stage": "Seed",
-      "amount": "$1.1B",
-      "what_they_do": "AI startup founded by ex-DeepMind David Silver",
-      "why_imaginary_space": "May need help building out their product quickly with their large seed funding",
-      "linkedin_search": "David Silver Imaginary Space CEO",
-      "source_url": "https://www.cnbc.com/2026/04/27/deepmind-ineffable-intelligence-record-seed-funding-nvidia-google.html",
-      "hours_ago": "~10d"
-    },
-    {
-      "name": "Yann LeCun's AI startup",
-      "stage": "Seed",
-      "amount": "$1B",
-      "what_they_do": "AI startup founded by Yann LeCun",
-      "why_imaginary_space": "May need help building out their product quickly with their large seed funding",
-      "linkedin_search": "Yann LeCun Imaginary Space CEO",
-      "source_url": "https://www.bloomberg.com/news/articles/2026-03-10/yann-lecun-s-new-ai-startup-raises-1-billion-in-seed-funding",
-      "hours_ago": "~27d"
-    },
-    {
-      "name": "DryRun Co",
-      "stage": "Seed",
-      "amount": "$1.2M",
-      "uvp": "Automates contract review for small law firms with no technical staff.",
-      "founder": "Jane Smith",
-      "source_url": "https://example.com",
-      "pain_signal": "Seed-stage B2B SaaS proving early distribution without a sales team.",
-      "outreach_message": "Saw DryRun Co just closed their seed round. Most legal-tech founders at this stage spend the first 6 months building features nobody asked for. What does your roadmap look like for the next 90 days?"
-    },
-    {
-      "name": "T\u00eate-\u00e0-T\u00eate",
+      "name": "Dreambase",
       "stage": "Pre-seed",
-      "amount": "1 million euros",
-      "uvp": "T\u00eate-\u00e0-T\u00eate is a social connection platform that connects people through user-created date proposals and experiences.",
-      "founder": "Not specified",
-      "source_url": "https://www.reddit.com/r/venturecapital/comments/1sd3az9/raising_1_million_euros_for_our_preseed/",
-      "pain_signal": "T\u00eate-\u00e0-T\u00eate faces the challenge of proving its model and achieving early distribution to grow its user base.",
-      "outreach_message": "T\u00eate-\u00e0-T\u00eate seems like an interesting platform for social connections. I'm curious about your approach to user acquisition and retention. How do you plan to scale your user base?"
+      "amount": "$3.7M",
+      "uvp": "Dreambase is an AI-powered analytics platform that helps people build data-driven companies without hiring a data team.",
+      "founder": "unknown",
+      "source_url": "https://news.crunchbase.com/venture/supabase-startup-investment-dreambase-ai-felicis/",
+      "pain_signal": "Dreambase needs to scale its technology and expand its customer base.",
+      "outreach_message": "You're building an AI-powered analytics platform, what's the biggest challenge you're facing in terms of product development right now?"
+    },
+    {
+      "name": "Humara",
+      "stage": "Pre-seed",
+      "amount": "$1.2M",
+      "uvp": "Humara is a software company that rebuilds how waste and recycling plants are designed and operated using AI SaaS.",
+      "founder": "unknown",
+      "source_url": "https://www.eu-startups.com/2026/05/spains-humara-raises-e1-2-million-to-cut-waste-plant-design-cycles-from-months-to-days-with-ai-saas/",
+      "pain_signal": "Humara needs to scale its physics-based design platform and roll out its AI copilot for live plant operations.",
+      "outreach_message": "You're cutting waste plant design cycles from months to days with AI SaaS, how are you handling the technical complexity of your platform?"
+    },
+    {
+      "name": "profitize",
+      "stage": "Pre-seed",
+      "amount": "$1.4M",
+      "uvp": "profitize is an AI-powered financial planning and analysis platform for the hospitality industry.",
+      "founder": "unknown",
+      "source_url": "https://www.eu-startups.com/2026/05/south-tyrols-profitize-raises-e1-4-million-to-scale-ai-powered-financial-planning-for-the-hospitality-sector/",
+      "pain_signal": "profitize needs to expand its technology and enter new European markets.",
+      "outreach_message": "You're scaling AI-powered financial planning for the hospitality sector, what are the biggest technical hurdles you're facing right now?"
+    },
+    {
+      "name": "Ethos",
+      "stage": "Pre-seed",
+      "amount": "$22.75M",
+      "uvp": "Ethos is an expert network with voice onboarding.",
+      "founder": "unknown",
+      "source_url": "https://techcrunch.com/2026/05/06/ethos-raises-22-75m-from-a16z-for-its-expert-network-with-voice-onboarding/",
+      "pain_signal": "Ethos needs to handle the high volume of experts being onboarded per week.",
+      "outreach_message": "You're onboarding a large number of experts per week, how are you ensuring the scalability of your platform?"
+    },
+    {
+      "name": "Subquadratic",
+      "stage": "Pre-seed",
+      "amount": "unknown",
+      "uvp": "Subquadratic is a startup that claims to have built the first large language model to fully escape the mathematical constraint that has defined every major AI system since 2017.",
+      "founder": "unknown",
+      "source_url": "https://venturebeat.com/technology/miami-startup-subquadratic-claims-1-000x-ai-efficiency-gain-with-subq-model-researchers-demand-independent-proof",
+      "pain_signal": "Subquadratic needs to prove the efficiency of its AI model.",
+      "outreach_message": "You're claiming a significant AI efficiency gain, what's the biggest challenge you're facing in terms of validating your model?"
+    },
+    {
+      "name": "SageOX",
+      "stage": "Pre-seed",
+      "amount": "unknown",
+      "uvp": "SageOX is a startup that provides agentic context infrastructure for AI agents.",
+      "founder": "unknown",
+      "source_url": "https://venturebeat.com/technology/ai-agents-are-missing-all-the-discussions-your-team-is-having-sageox-has-an-answer-agentic-context-infrastructure",
+      "pain_signal": "SageOX needs to develop a scalable and reliable context infrastructure for AI agents.",
+      "outreach_message": "You're building agentic context infrastructure for AI agents, how are you handling the complexity of integrating with existing systems?"
+    },
+    {
+      "name": "Moritz",
+      "stage": "Pre-seed",
+      "amount": "$9M",
+      "uvp": "Moritz is a law firm supercharged with AI.",
+      "founder": "unknown",
+      "source_url": "https://sifted.eu/articles/y-combinator-alum-moritz-raises-9m/",
+      "pain_signal": "Moritz needs to develop and integrate AI technology into its law firm.",
+      "outreach_message": "You're building a law firm supercharged with AI, what's the biggest challenge you're facing in terms of product development right now?"
     }
   ],
   "preferences": {
@@ -88,5 +124,5 @@
       "acquisition"
     ]
   },
-  "last_run": "2026-05-06T21:21:21.660244+00:00"
+  "last_run": "2026-05-06T21:29:51.070125+00:00"
 }
