@@ -24,8 +24,9 @@ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")
 DRY_RUN = os.getenv("DRY_RUN", "false").lower() in ("1", "true", "yes")
 MEMORY_PATH = os.path.join(os.path.dirname(__file__), "memory.json")
 MAX_CANDIDATES = 30
-TARGET_LEADS = 7
-MAX_MESSAGE_CHARS = 1950  # Discord hard limit is 2000
+TARGET_LEADS = 10   # Groq will filter down; we want enough raw input
+MAX_OUTREACH = 4    # Max companies in the outreach section
+MAX_MESSAGE_CHARS = 1800
 
 SOURCES = [
     {"name": "TechCrunch Startups",  "url": "https://techcrunch.com/category/startups/feed/"},
@@ -195,90 +196,131 @@ def normalize_amount(raw: str) -> str:
         return f"${num / 1_000:.0f}K"
     return f"${num:.0f}"
 
-# ─── Groq: analysis pass ─────────────────────────────────────────────────────
+# ─── Groq pipeline ───────────────────────────────────────────────────────────
 
 def build_analysis_prompt(candidates: list[dict], last_7_reports: list) -> str:
     news_block = "\n\n".join(
-        f"[{i+1}] {c['source']}\nTITLE: {c['title']}\nSUMMARY: {c['summary'][:350]}\nURL: {c['url']}"
+        f"[{i+1}] SOURCE: {c['source']}\nTITLE: {c['title']}\nSUMMARY: {c['summary'][:350]}\nURL: {c['url']}"
         for i, c in enumerate(candidates)
     )
     skip = ", ".join(r.get("name", "") for r in last_7_reports if r.get("name"))
-    skip_line = f"\nSKIP (already reported this week): {skip}" if skip else ""
+    skip_line = f"\nREJECT these (already reported this week): {skip}" if skip else ""
 
-    return f"""You are a lead-gen scout for Imaginary Space, a product studio that builds an early-stage founder's MVP into a finished product in 4 weeks. Flat fee, full build: design, engineering, QA, delivery.
+    return f"""You are operating a strict data pipeline. Your job is to transform noisy startup news into structured lead data. No creativity. No gap-filling. If data is missing or weak, reject the company.
 
-IDEAL CLIENT:
-- Pre-seed or Seed round, $100K to $8M. Discard anything above $10M.
-- Has a working prototype or MVP, but needs the full product built
-- No dedicated CTO or engineering team yet
-- Verticals: AI tools, B2B SaaS, marketplaces, developer tools, automation, Fintech
+--- STEP 1: HARD REJECTION ---
 
-HARD DISCARD (exclude entirely):
-- Round above $10M
-- Already has CTO, VP Engineering, or "engineering team of X"
-- Series A, B, C or later
-- Pure research labs, crypto, biotech, academic spinouts{skip_line}
+Include a company ONLY if ALL conditions are true:
+- Contains a clear funding event (raised, secured, closed a round)
+- Funding amount is EXPLICITLY stated in the article
+- Funding is between $250K and $5M USD (convert currencies if needed; reject if above $5M)
+- Stage is Pre-seed, Seed, or Series A at most
+- Source is credible (TechCrunch, VentureBeat, Sifted, Crunchbase, EU Startups, HN)
 
-ONLY include items that are real announcements: a funding round closed, a product launched, a founder or VC posted a signal. No opinion pieces, no retrospectives.
+REJECT if:
+- No funding amount stated
+- Amount is above $3M
+- Famous founders or well-known companies
+- Opinion pieces, product launches, or announcements without funding
+- Quantum computing, biotech, defense, deep tech research labs{skip_line}
 
-Find up to {TARGET_LEADS} qualifying companies. For each, write a cold outreach DM for Carlos (he runs Imaginary Space).
+--- STEP 2: DATA NORMALIZATION ---
 
-DM rules - read carefully:
-- Open with a SPECIFIC observation about their situation (stage, sector, distribution challenge). NOT "congrats" or "love what you're building".
-- 2-3 sentences max
-- No em-dashes (use commas or periods instead)
-- No flattery words: amazing, incredible, impressive, exciting, awesome
-- Casual tone, peer-to-peer
-- End with ONE open question about their current challenge
-- Zero or one emoji total
+For each accepted company:
+- Amount: convert to USD millions. Examples: €1M = $1.1M, €2.8M = $3.1M, $750K = $0.75M
+- Round: must be Pre-seed, Seed, or Series A. If unclear, reject.
+- Founder: if missing, use "{{Company}} CEO"
+- UVP: one plain sentence, no buzzwords, no fluff
 
-Return ONLY a JSON array, no markdown fences, no explanation:
+--- STEP 3 + 4: OUTREACH MESSAGES ---
+
+For max {MAX_OUTREACH} of the accepted companies, write a cold DM.
+
+BANNED phrases (hard reject any message containing):
+- "You're building"
+- "Interesting"
+- "Curious about"
+- "Love what"
+- Any compliment or flattery
+- Restating the company description
+
+Each message MUST:
+1. Open with a specific observation about their stage and operational challenge
+2. Be max 3 sentences
+3. End with exactly one direct question about a growth bottleneck
+4. Use at most one emoji
+5. Be peer-to-peer, not salesy
+
+Signal mapping (use the right one, no guessing):
+- Pre-seed: unclear ICP, early distribution, validating product
+- Seed: finding repeatable acquisition channel, early scaling issues
+- AI company: distribution problem (tech is commoditized, differentiation missing)
+- Marketplace: supply-demand imbalance, retention
+- Health/regulated: slow sales cycles, compliance friction
+
+BAD signal: "needs to scale"
+GOOD signal: "has not found a repeatable acquisition channel yet"
+
+--- STEP 5: SELF-REWRITE ---
+
+After generating your output, rewrite every message that:
+- Contains any banned phrase
+- Has a weak or vague signal
+- Opens with a compliment
+- Restates the company description
+- Uses an em-dash
+
+Do NOT validate. REWRITE.
+
+--- OUTPUT ---
+
+Return ONLY a valid JSON array, no markdown fences, no explanation:
 
 [
   {{
     "name": "Startup Name",
-    "stage": "Pre-seed",
+    "stage": "Seed",
     "amount": "$1.5M",
-    "uvp": "One plain sentence on what they do.",
-    "founder": "First Last or unknown",
+    "uvp": "One plain sentence.",
+    "founder": "First Last",
     "source_url": "https://...",
-    "pain_signal": "One sentence on the specific challenge they face at this stage.",
-    "outreach_message": "Your 2-3 sentence DM draft here."
+    "signal": "has not found a repeatable acquisition channel yet",
+    "outreach_message": "2-3 sentence DM ending with a question.",
+    "include_outreach": true
   }}
 ]
 
-If nothing qualifies, return [].
+Set "include_outreach": true for the top {MAX_OUTREACH} companies only. Set false for the rest.
+If nothing qualifies after filtering, return [].
 
 NEWS ITEMS:
 {news_block}"""
 
 
-def build_review_prompt(leads: list[dict]) -> str:
-    leads_block = json.dumps(leads, indent=2)
-    return f"""You are reviewing cold outreach messages before they are sent. Check each message against these rules:
+def build_rewrite_prompt(leads: list[dict]) -> str:
+    return f"""You are a strict editor. Check every outreach_message in this JSON for violations. Do NOT validate — REWRITE any message that breaks the rules.
 
 Rules:
-1. No flattery openers ("congrats", "love what you're building", "amazing", "incredible", "impressive")
-2. No em-dashes. Replace with commas or periods.
-3. Must open with a specific observation about the company's situation, not a generic comment
-4. 2-3 sentences max
-5. Must end with one open question
-6. Peer-to-peer tone, not salesy
-7. If founder is "unknown" or "not specified", set it to "unknown"
-8. Amount must be in format like "$1.5M", "$500K", "$2B". If in words like "1 million euros", convert to "$1M".
+1. No em-dashes. Replace with a comma or period.
+2. No banned openers: "You're building", "Interesting", "Curious", "Love what", any compliment.
+3. Must open with a specific observation about the company's stage and problem.
+4. Max 3 sentences. End with one question.
+5. Signal must be concrete: BAD "needs to scale" / GOOD "has not found a repeatable acquisition channel yet"
+6. Amount must be "$XM" or "$X.XM" format (e.g. "$1.5M", "$0.75M"). Fix if wrong.
+7. If founder is blank, "unknown", or "not specified", set to "{{name}} CEO".
 
-Return the corrected JSON array with the same structure. Fix any violations. Do not add new companies. Return ONLY valid JSON, no markdown:
+Return the corrected JSON array with identical structure. Return ONLY valid JSON, no markdown:
 
-{leads_block}"""
+{json.dumps(leads, indent=2)}"""
 
 
-def call_groq(prompt: str, max_tokens: int = 2500) -> str | None:
+def call_groq(prompt: str, max_tokens: int = 3000) -> str | None:
     client = Groq(api_key=GROQ_API_KEY)
     try:
         resp = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.2,
+            temperature=0.1,
             max_tokens=max_tokens,
         )
         return resp.choices[0].message.content.strip()
@@ -288,17 +330,24 @@ def call_groq(prompt: str, max_tokens: int = 2500) -> str | None:
 
 
 def parse_json_response(raw: str) -> list | None:
-    raw = re.sub(r"^```(?:json)?\s*", "", raw.strip())
-    raw = re.sub(r"\s*```$", "", raw)
+    # Strip code fences
+    cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip())
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+    # Extract the JSON array even if Groq adds text before/after
+    match = re.search(r"\[.*\]", cleaned, re.DOTALL)
+    if not match:
+        print(f"[ERROR] No JSON array found in response")
+        print(f"[DEBUG] Raw snippet: {cleaned[:300]}")
+        return None
     try:
-        result = json.loads(raw)
+        result = json.loads(match.group())
         if isinstance(result, list):
             return result
-        print(f"[ERROR] Expected JSON array, got: {type(result)}")
+        print(f"[ERROR] Expected list, got: {type(result)}")
         return None
     except json.JSONDecodeError as ex:
         print(f"[ERROR] JSON parse failed: {ex}")
-        print(f"[DEBUG] Raw: {raw[:400]}")
+        print(f"[DEBUG] Extracted: {match.group()[:400]}")
         return None
 
 
@@ -313,8 +362,9 @@ def analyze_and_review(candidates: list[dict], last_7_reports: list) -> list[dic
                 "uvp": "Email platform built for SaaS products that replaces Mailchimp for product teams.",
                 "founder": "Chris Frantz",
                 "source_url": "https://techcrunch.com/example",
-                "pain_signal": "Seed-stage SaaS proving early distribution without a dedicated growth team.",
-                "outreach_message": "Most SaaS founders at seed stage spend 3 months picking the wrong email tool before they realize their onboarding flow is the real problem. What does your activation funnel look like right now?",
+                "signal": "has not found a repeatable acquisition channel beyond direct sales yet",
+                "outreach_message": "Most seed-stage SaaS founders I talk to realize 6 months in that their onboarding flow is killing activation before email even matters. What does your week-1 retention look like right now?",
+                "include_outreach": True,
             },
             {
                 "name": "Finta",
@@ -323,14 +373,14 @@ def analyze_and_review(candidates: list[dict], last_7_reports: list) -> list[dic
                 "uvp": "Automates investor updates and cap table management for early-stage founders.",
                 "founder": "Ramy Adeeb",
                 "source_url": "https://techcrunch.com/example2",
-                "pain_signal": "Pre-seed fintech proving product-market fit before they can afford a full engineering team.",
-                "outreach_message": "Fintech compliance at pre-seed is usually the thing that slows down the product roadmap the most. Are you building the core product in-house or working with outside dev capacity right now?",
+                "signal": "unclear ICP: targeting all founders when the real pain is felt by solo technical founders post-raise",
+                "outreach_message": "Pre-seed fintech tools usually die on ICP clarity before they hit distribution. Who is the one founder profile you are seeing close fastest right now?",
+                "include_outreach": True,
             },
         ]
 
-    # Pass 1: find and score leads
-    print(f"[INFO] Pass 1: sending {len(candidates)} candidates to Groq")
-    raw1 = call_groq(build_analysis_prompt(candidates, last_7_reports), max_tokens=3000)
+    print(f"[INFO] Pass 1: analysis — {len(candidates)} candidates")
+    raw1 = call_groq(build_analysis_prompt(candidates, last_7_reports))
     if raw1 is None:
         return None
 
@@ -338,24 +388,23 @@ def analyze_and_review(candidates: list[dict], last_7_reports: list) -> list[dic
     if leads is None:
         return None
     if not leads:
-        print("[INFO] Groq found no qualifying leads")
+        print("[INFO] No qualifying leads after filtering")
         return []
 
-    print(f"[INFO] Pass 1 returned {len(leads)} lead(s) — running review pass")
+    print(f"[INFO] Pass 1: {len(leads)} lead(s) — running rewrite pass")
 
-    # Pass 2: review and fix messages
-    raw2 = call_groq(build_review_prompt(leads), max_tokens=2500)
+    raw2 = call_groq(build_rewrite_prompt(leads), max_tokens=2500)
     if raw2 is None:
-        print("[WARN] Review pass failed — using pass 1 output as-is")
+        print("[WARN] Rewrite pass failed — using pass 1 output")
         return leads
 
-    reviewed = parse_json_response(raw2)
-    if reviewed is None:
-        print("[WARN] Review pass returned invalid JSON — using pass 1 output")
+    rewritten = parse_json_response(raw2)
+    if rewritten is None:
+        print("[WARN] Rewrite pass returned invalid JSON — using pass 1 output")
         return leads
 
-    print(f"[INFO] Pass 2 review complete: {len(reviewed)} lead(s)")
-    return reviewed
+    print(f"[INFO] Pass 2: rewrite complete — {len(rewritten)} lead(s)")
+    return rewritten
 
 # ─── Discord formatter ───────────────────────────────────────────────────────
 
@@ -372,9 +421,9 @@ def build_discord_message(leads: list[dict]) -> str:
     date_str = datetime.now(timezone.utc).strftime("%B %d, %Y")
     count = len(leads)
 
-    # ── Section 1: news summary ──────────────────────────────────────────────
+    # ── Section 1: funding summary ───────────────────────────────────────────
     lines = [
-        f"**Startup Intel - {date_str}** | {count} new signal{'s' if count != 1 else ''}",
+        f"🔥 Here is what's new friends - {date_str} | {count} round{'s' if count != 1 else ''} 🌍🚀",
         "",
     ]
     for lead in leads:
@@ -382,36 +431,41 @@ def build_discord_message(leads: list[dict]) -> str:
         amount = normalize_amount(lead.get("amount", ""))
         stage = lead.get("stage", "")
         uvp = no_emdash(lead.get("uvp", ""))
-        lines.append(f"- **{name}** {amount} {stage} | {uvp}")
+        lines.append(f"📌 {name} raised {amount} {stage} - {uvp}")
 
-    lines += ["", "---", "**Outreach Angles**", ""]
+    lines += ["", "Cold Outreach Angles", ""]
 
-    # ── Section 2: outreach — include as many as fit ─────────────────────────
-    header_len = len("\n".join(lines))
-    outreach_blocks = []
-
+    # ── Section 2: outreach (max MAX_OUTREACH, must fit in char limit) ───────
+    outreach_included = 0
     for lead in leads:
+        if not lead.get("include_outreach"):
+            continue
+        if outreach_included >= MAX_OUTREACH:
+            break
+
         name = no_emdash(lead.get("name", "Unknown"))
         amount = normalize_amount(lead.get("amount", ""))
         stage = lead.get("stage", "")
-        founder = lead.get("founder", "")
+        founder = lead.get("founder", "") or f"{name} CEO"
         li = linkedin_url(founder, name)
         msg = no_emdash(lead.get("outreach_message", ""))
-        signal = no_emdash(lead.get("pain_signal", ""))
+        signal = no_emdash(lead.get("signal", ""))
 
-        block = f"**{name} | {amount} {stage}**\n{li}\n> {msg}\n*{signal}*\n"
-        outreach_blocks.append(block)
-
-    # Add blocks until we'd exceed the limit
-    included = []
-    running = header_len
-    for block in outreach_blocks:
-        if running + len(block) + 1 > MAX_MESSAGE_CHARS:
+        block = [
+            f"🎯 Potential Message",
+            f"{name} | {amount} {stage}",
+            li,
+            "",
+            f"> {msg}",
+            f"> Signal: {signal}",
+            "",
+        ]
+        candidate = "\n".join(lines + block)
+        if len(candidate) > MAX_MESSAGE_CHARS:
             break
-        included.append(block)
-        running += len(block) + 1
+        lines += block
+        outreach_included += 1
 
-    lines += included
     return "\n".join(lines).strip()
 
 # ─── Post ────────────────────────────────────────────────────────────────────
