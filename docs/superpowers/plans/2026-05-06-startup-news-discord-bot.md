@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a standalone Node.js/TypeScript bot that collects early-stage startup news, formats a concise Discord post, and posts it through a logged-in Playwright browser on Google Cloud.
+**Goal:** Build a standalone Node.js/TypeScript bot that collects early-stage startup news, formats a concise Discord post, and posts it through a logged-in Playwright browser on Oracle Cloud.
 
 **Architecture:** The bot is split into small modules: config, RSS fetching, filtering/extraction, LinkedIn contact fallback, formatting, and Discord Playwright posting. The command entrypoint supports preview, login, and post modes so the VM can be tested before scheduling.
 
@@ -27,7 +27,7 @@
 - `tests/extract.test.ts`: filtering and extraction tests.
 - `tests/linkedin.test.ts`: LinkedIn URL tests.
 - `tests/format.test.ts`: Discord message formatting tests.
-- `docs/google-cloud-setup.md`: plain-English Google Cloud VM setup and daily scheduler instructions.
+- `docs/oracle-cloud-setup.md`: plain-English Oracle Cloud VM setup and daily scheduler instructions.
 
 ---
 
@@ -323,17 +323,17 @@ Expected: prints a Discord message or a clear "no eligible items found" message.
 
 ---
 
-### Task 6: Google Cloud Setup Docs
+### Task 6: Oracle Cloud Setup Docs
 
 **Files:**
 - Create: `README.md`
-- Create: `docs/google-cloud-setup.md`
+- Create: `docs/oracle-cloud-setup.md`
 
 - [ ] **Step 1: Write README**
 
 Document local commands, what the bot does, and the plain-English setup flow.
 
-- [ ] **Step 2: Write Google Cloud setup guide**
+- [ ] **Step 2: Write Oracle Cloud setup guide**
 
 Document installing Node.js, cloning repo, setting `.env`, running `npm run login`, and installing a `systemd` timer.
 

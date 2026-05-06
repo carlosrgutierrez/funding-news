@@ -1,21 +1,28 @@
-# Google Cloud Setup
+# Oracle Cloud Setup
 
-This guide sets up the bot on a Google Cloud VM.
+This guide sets up the bot on an Oracle Cloud VM.
 
-Plain English: Google Cloud gives us a computer in the cloud. The bot runs on that computer. Playwright opens Discord there and posts the daily message.
+Plain English: Oracle Cloud gives us a computer in the cloud. The bot runs on that computer. Playwright opens Discord there and posts the daily message.
 
 ## 1. Create The VM
 
-In Google Cloud, create a Compute Engine VM.
+In Oracle Cloud, create a Compute Instance.
 
 Recommended starting setup:
 
-- OS: Ubuntu 24.04 LTS
-- Machine: small general-purpose VM
+- Image: Ubuntu 24.04 LTS
+- Shape: `VM.Standard.A1.Flex` if Always Free capacity is available
+- CPU and memory: start with 1 OCPU and 6 GB RAM, then increase if Chromium is slow
 - Disk: 20 GB or more
 - Network: allow outbound internet
 
 The VM must stay running for the daily post to happen.
+
+For the lowest-cost setup, use Oracle Always Free if your account and region have capacity. If Always Free capacity is unavailable, choose the smallest paid shape that can run Chromium reliably.
+
+Plain English: choose the free Oracle shape first. If Oracle says there is no capacity, try another region or wait and try again later.
+
+Playwright supports Ubuntu 22.04 and Ubuntu 24.04 on both x86-64 and arm64, so Oracle's Arm-based Always Free shape is acceptable for this bot.
 
 ## 2. Install System Packages
 
@@ -180,6 +187,6 @@ Most likely causes:
 Fixes:
 
 - If Discord asks for login, run `npm run login` again.
-- If the VM is off, start it again in Google Cloud.
+- If the VM is off, start it again in Oracle Cloud.
 - If Discord changed layout, the Playwright selector needs a small code update.
 - If there is no good news, the bot should skip instead of posting filler.

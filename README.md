@@ -89,7 +89,7 @@ Use `DRY_RUN=true` while testing. Change it to `false` only when the Discord log
 
 ## Plain-English Setup Flow
 
-1. Put this code on a Google Cloud VM.
+1. Put this code on an Oracle Cloud VM.
 2. Install Node.js and Playwright.
 3. Run `npm run login`.
 4. Log into Discord in the browser that opens.
@@ -98,4 +98,4 @@ Use `DRY_RUN=true` while testing. Change it to `false` only when the Discord log
 7. Run `npm run post`.
 8. Add the daily scheduler.
 
-See [docs/google-cloud-setup.md](docs/google-cloud-setup.md) for the Google Cloud setup.
+See [docs/oracle-cloud-setup.md](docs/oracle-cloud-setup.md) for the Oracle Cloud setup.
