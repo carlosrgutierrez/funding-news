@@ -12,13 +12,13 @@ It looks only for very early companies:
 
 It cares most about AI startups, but it can include other early startups if the news is useful for outreach.
 
-The robot will run on an Oracle Cloud VM. A VM is just a computer in the cloud. Playwright will open Discord on that cloud computer, like a person opening Discord in a browser, and post the message into the channel.
+The robot will run on a Google Cloud VM, likely Google Compute Engine. A VM is just a computer in the cloud. Playwright will open Discord on that cloud computer, like a person opening Discord in a browser, and post the message into the channel.
 
 The code will start in `https://github.com/drozrzd/startup-news`. Later, the repo can be transferred to Carlos.
 
 ## Goal
 
-Build a standalone GitHub project that runs on an Oracle Cloud VM and posts a daily Discord update through Playwright. The bot should help Carlos track useful early-stage startup news for outreach, with AI companies prioritized.
+Build a standalone GitHub project that runs on a Google Cloud VM and posts a daily Discord update through Playwright. The bot should help Carlos track useful early-stage startup news for outreach, with AI companies prioritized.
 
 Current build repo:
 
@@ -91,7 +91,7 @@ Primary modules:
 - `src/linkedin/`: resolve contact URLs. Use exact LinkedIn profile URLs when confidently found, otherwise fallback to LinkedIn people search URLs.
 - `src/format/`: build the Discord message.
 - `src/discord/`: use Playwright to post into Discord with a persistent browser profile.
-- `scripts/`: setup helpers and Oracle VM scheduling docs.
+- `scripts/`: setup helpers and Google Cloud VM scheduling docs.
 
 Daily flow in plain English:
 
@@ -185,9 +185,9 @@ Angle: Seed-stage teams usually need customer proof, early distribution, and sha
 
 ## Runtime And Operations
 
-The bot runs on an Oracle Cloud VM. Ubuntu is the recommended operating system inside the VM because it is straightforward for Node.js, Playwright, and background scheduling.
+The bot runs on a Google Cloud VM. Ubuntu is the recommended operating system inside the VM because it is straightforward for Node.js, Playwright, and background scheduling.
 
-Plain English: Oracle gives us the cloud computer. Ubuntu is the basic software installed on that cloud computer. Node.js runs the bot. Playwright opens the browser.
+Plain English: Google Cloud gives us the cloud computer. Ubuntu is the basic software installed on that cloud computer. Node.js runs the bot. Playwright opens the browser.
 
 Expected commands:
 
@@ -232,7 +232,7 @@ After posting, the bot should verify that the posted message appears in the chan
 Approve this design if these statements are true:
 
 - The bot should post into Discord by using a logged-in browser, not a webhook.
-- The bot should run on an Oracle Cloud VM.
+- The bot should run on a Google Cloud VM.
 - The bot should only cover pre-seed, seed, and Series A startups.
 - The bot should prioritize AI startups, but can include other early startups when the news is useful for outreach.
 - Each item should include the company, stage or signal, founder or CEO contact link, what the company does, and an outreach angle.
