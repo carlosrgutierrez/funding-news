@@ -1,15 +1,29 @@
 {
   "processed_urls": [
-    "https://www.joinloopback.com/",
-    "https://www.cnbc.com/2026/04/27/deepmind-ineffable-intelligence-record-seed-funding-nvidia-google.html",
-    "https://www.bloomberg.com/news/articles/2026-03-10/yann-lecun-s-new-ai-startup-raises-1-billion-in-seed-funding",
-    "https://www.opc.community/funding",
     "https://techcrunch.com/2026/05/06/khosla-backed-robotics-startup-genesis-ai-has-gone-full-stack-demo-shows/",
-    "https://news.ycombinator.com/item?id=47726833",
+    "https://news.ycombinator.com/item?id=47388387",
+    "https://www.reddit.com/r/startups/comments/1t5l5zw/seeking_advice_earlystage_neurotech_startup_h1b/",
+    "https://www.reddit.com/r/venturecapital/comments/1sd3az9/raising_1_million_euros_for_our_preseed/",
+    "https://www.reddit.com/r/startups/comments/1t5eodh/best_method_to_prep_for_investor_pitchescalls/",
+    "https://news.ycombinator.com/item?id=47267559",
+    "https://www.cnbc.com/2026/04/27/deepmind-ineffable-intelligence-record-seed-funding-nvidia-google.html",
     "https://techcrunch.com/2026/04/30/legal-ai-startup-legora-hits-5-6-valuation-and-its-battle-with-harvey-just-got-hotter/",
+    "https://www.reddit.com/r/venturecapital/comments/1s43s3e/i_built_a_dashboard_for_academic_research_on/",
+    "https://www.reddit.com/r/venturecapital/comments/1s1g2wf/air_street_capital_closes_232m_fund_iii_nathan/",
+    "https://www.reddit.com/r/venturecapital/comments/1s4fejs/looking_for_angel_inv_opportunities_for/",
+    "https://www.reddit.com/r/venturecapital/comments/1sivvvu/does_my_company_have_a_chance_of_raising_250k/",
+    "https://news.ycombinator.com/item?id=47278980",
+    "https://www.reddit.com/r/venturecapital/comments/1snmfln/vcmarketers_what_is_the_next_explosive_vertical/",
+    "https://news.ycombinator.com/item?id=47726833",
+    "https://www.reddit.com/r/venturecapital/comments/1swf4ax/building_arai_lighting_system_looking_for_preseed/",
+    "https://www.joinloopback.com/",
     "https://hooked.news/",
+    "https://www.reddit.com/r/venturecapital/comments/1sqqk93/raising_2_million_preseed_for_polar_ace/",
     "https://techcrunch.com/2026/04/30/y-combinator-alum-skio-sells-for-105m-cash-only-raised-8m-founder-says/",
-    "https://news.ycombinator.com/item?id=47388387"
+    "https://news.ycombinator.com/item?id=47213310",
+    "https://sylixide.com",
+    "https://www.opc.community/funding",
+    "https://www.bloomberg.com/news/articles/2026-03-10/yann-lecun-s-new-ai-startup-raises-1-billion-in-seed-funding"
   ],
   "blacklist_domains": [],
   "last_7_reports": [
@@ -32,6 +46,26 @@
       "linkedin_search": "Yann LeCun Imaginary Space CEO",
       "source_url": "https://www.bloomberg.com/news/articles/2026-03-10/yann-lecun-s-new-ai-startup-raises-1-billion-in-seed-funding",
       "hours_ago": "~27d"
+    },
+    {
+      "name": "DryRun Co",
+      "stage": "Seed",
+      "amount": "$1.2M",
+      "uvp": "Automates contract review for small law firms with no technical staff.",
+      "founder": "Jane Smith",
+      "source_url": "https://example.com",
+      "pain_signal": "Seed-stage B2B SaaS proving early distribution without a sales team.",
+      "outreach_message": "Saw DryRun Co just closed their seed round. Most legal-tech founders at this stage spend the first 6 months building features nobody asked for. What does your roadmap look like for the next 90 days?"
+    },
+    {
+      "name": "T\u00eate-\u00e0-T\u00eate",
+      "stage": "Pre-seed",
+      "amount": "1 million euros",
+      "uvp": "T\u00eate-\u00e0-T\u00eate is a social connection platform that connects people through user-created date proposals and experiences.",
+      "founder": "Not specified",
+      "source_url": "https://www.reddit.com/r/venturecapital/comments/1sd3az9/raising_1_million_euros_for_our_preseed/",
+      "pain_signal": "T\u00eate-\u00e0-T\u00eate faces the challenge of proving its model and achieving early distribution to grow its user base.",
+      "outreach_message": "T\u00eate-\u00e0-T\u00eate seems like an interesting platform for social connections. I'm curious about your approach to user acquisition and retention. How do you plan to scale your user base?"
     }
   ],
   "preferences": {
@@ -54,5 +88,5 @@
       "acquisition"
     ]
   },
-  "last_run": "2026-05-06T21:12:10.271127+00:00"
+  "last_run": "2026-05-06T21:21:21.660244+00:00"
 }

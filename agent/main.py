@@ -172,7 +172,7 @@ def pre_filter(items: list[dict], memory: dict) -> list[dict]:
 
 # ─── Gemini Analysis ─────────────────────────────────────────────────────────
 
-def build_gemini_prompt(candidates: list[dict], last_7_reports: list) -> str:
+def build_groq_prompt(candidates: list[dict], last_7_reports: list) -> str:
     news_block = "\n\n".join(
         f"[{i+1}] SOURCE: {c['source']}\nTITLE: {c['title']}\nSUMMARY: {c['summary'][:400]}\nURL: {c['url']}"
         for i, c in enumerate(candidates)
@@ -182,41 +182,47 @@ def build_gemini_prompt(candidates: list[dict], last_7_reports: list) -> str:
     if last_7_reports:
         previous_names = [r.get("name", "") for r in last_7_reports if r.get("name")]
         if previous_names:
-            previous_block = f"\n\nALREADY REPORTED (do NOT include these): {', '.join(previous_names)}"
+            previous_block = f"\n\nALREADY REPORTED (skip these): {', '.join(previous_names)}"
 
-    return f"""You are a lead-gen scout for Imaginary Space, a product studio that takes early-stage founders from a scrappy MVP to a fully finished product in 4 weeks. We charge a flat fee and do the full build — design, engineering, QA, delivery.
+    return f"""You are a lead-gen scout for Imaginary Space, a product studio that takes early-stage founders from a scrappy MVP to a fully finished product in 4 weeks.
 
-Our ideal client:
-- Just received Pre-seed or Seed funding in the $250K–$5M range. DISCARD any round above $10M — those companies can hire their own team.
-- Has a working MVP or prototype but not a finished product
-- Does NOT have an in-house CTO or dedicated engineering team
-- Is in a vertical we can serve: AI tools, SaaS, B2B software, marketplaces, developer tools, automation
-- Founder is likely a solo founder or small non-technical team who needs to move fast
+INCLUDE only items that are:
+- A new funding announcement, a new product launch, or a signal from a VC, investor, or founder
+- From a reliable source (TechCrunch, Bloomberg, HN, reputable VC blogs)
+- Pre-seed or Seed round, $250K to $5M. HARD DISCARD any round above $10M.
+- Company does NOT mention a CTO, VP Eng, or in-house engineering team
 
-Hard discard rules (exclude entirely):
-- Round size above $10M
-- Company already mentions CTO, VP Engineering, or engineering team
-- Late stage: Series A, B, C, or beyond
-- Pure research labs or academic spinouts with no product intent
+DISCARD: rounds above $10M, Series A/B/C+, research labs, crypto, biotech, pure research spinouts, companies with existing eng teams.
 
-From the news items below, identify the top {MAX_LEADS_TO_POST} that are the strongest leads for Imaginary Space. If fewer than {MAX_LEADS_TO_POST} genuinely qualify, return only those. If none qualify, return [].
+For each qualifying company, write a short outreach message (3 sentences max). Rules:
+- Casual and peer-to-peer, not salesy
+- No flattery (no "amazing", "incredible", "love what you're building")
+- No em-dashes
+- End with one open question
+- One emoji max
 
-Return ONLY valid JSON — no markdown, no explanation — in this exact format:
+Identify the real pain signal from stage:
+- Pre-seed/Seed: figuring out who their customer is, proving the model, early distribution
+- AI company: distribution problem (everyone has the tech, few have the customers)
+- Marketplace: chicken-and-egg, retention
+- B2B SaaS: sales cycles, proving ROI
+
+Return ONLY valid JSON, no markdown, no explanation:
 
 [
   {{
     "name": "Startup Name",
-    "stage": "Pre-seed / Seed",
+    "stage": "Pre-seed",
     "amount": "$1.2M",
-    "what_they_do": "One sentence description.",
-    "why_imaginary_space": "Specific reason why they need us right now — what gap we fill.",
-    "linkedin_search": "founder name Imaginary Space CEO",
+    "uvp": "One plain-language sentence on what they do.",
+    "founder": "First Last",
     "source_url": "https://...",
-    "hours_ago": "~4h"
+    "pain_signal": "One sentence on what challenge this startup faces right now.",
+    "outreach_message": "3-sentence casual DM ending with a question."
   }}
 ]
 
-If fewer than {MAX_LEADS_TO_POST} items are genuinely good leads, return only those. If none qualify, return an empty array [].{previous_block}
+If none qualify, return [].{previous_block}
 
 NEWS ITEMS:
 {news_block}"""
@@ -228,17 +234,17 @@ def analyze_with_gemini(candidates: list[dict], last_7_reports: list) -> list[di
             {
                 "name": "DryRun Co",
                 "stage": "Seed",
-                "amount": "$1M",
-                "what_they_do": "A test startup for dry run mode.",
-                "why_imaginary_space": "They need a full product build and have no engineering team.",
-                "linkedin_search": "DryRun Co CEO",
+                "amount": "$1.2M",
+                "uvp": "Automates contract review for small law firms with no technical staff.",
+                "founder": "Jane Smith",
                 "source_url": "https://example.com",
-                "hours_ago": "~2h",
+                "pain_signal": "Seed-stage B2B SaaS proving early distribution without a sales team.",
+                "outreach_message": "Saw DryRun Co just closed their seed round. Most legal-tech founders at this stage spend the first 6 months building features nobody asked for. What does your roadmap look like for the next 90 days?",
             }
         ]
 
     client = Groq(api_key=GROQ_API_KEY)
-    prompt = build_gemini_prompt(candidates, last_7_reports)
+    prompt = build_groq_prompt(candidates, last_7_reports)
     print(f"[INFO] Sending {len(candidates)} candidates to Groq")
 
     try:
@@ -269,69 +275,73 @@ def analyze_with_gemini(candidates: list[dict], last_7_reports: list) -> list[di
 
 # ─── Discord ─────────────────────────────────────────────────────────────────
 
-def build_linkedin_url(search_query: str) -> str:
-    query = search_query.replace(" ", "%20")
+MAX_MESSAGE_CHARS = 1800
+
+def build_linkedin_url(founder: str, company: str) -> str:
+    query = f"{founder} {company}".strip().replace(" ", "+")
     return f"https://www.linkedin.com/search/results/people/?keywords={query}"
+
+def no_emdash(text: str) -> str:
+    return text.replace("—", "-").replace("–", "-")
+
+def build_discord_message(leads: list[dict]) -> str:
+    date_str = datetime.now(timezone.utc).strftime("%B %d, %Y")
+    count = len(leads)
+
+    lines = [f"🔥 **Here is what's new friends - {date_str}** | {count} round{'s' if count != 1 else ''} 🌍🚀", ""]
+
+    for lead in leads:
+        name = no_emdash(lead.get("name", "Unknown"))
+        amount = lead.get("amount", "undisclosed")
+        stage = lead.get("stage", "")
+        uvp = no_emdash(lead.get("uvp", ""))
+        lines.append(f"📌 **{name}** raised {amount} {stage} - {uvp}")
+
+    lines.append("")
+    lines.append("")
+    lines.append("**Cold Outreach Angles**")
+    lines.append("")
+
+    for lead in leads:
+        name = no_emdash(lead.get("name", "Unknown"))
+        amount = lead.get("amount", "undisclosed")
+        stage = lead.get("stage", "")
+        founder = lead.get("founder", "")
+        company = lead.get("name", "")
+        linkedin_url = build_linkedin_url(founder, company)
+        message = no_emdash(lead.get("outreach_message", ""))
+        signal = no_emdash(lead.get("pain_signal", ""))
+
+        lines.append(f"🎯 **Potential Message**")
+        lines.append(f"**{name} - {amount} {stage}**")
+        lines.append(linkedin_url)
+        lines.append(f"> {message}")
+        lines.append(f"*Signal: {signal}*")
+        lines.append("")
+
+    full = "\n".join(lines).strip()
+
+    # Hard truncate to Discord limit with a note
+    if len(full) > MAX_MESSAGE_CHARS:
+        full = full[:MAX_MESSAGE_CHARS - 20].rsplit("\n", 1)[0] + "\n...(truncated)"
+
+    return full
 
 def post_to_discord(leads: list[dict]) -> None:
     if not leads:
         print("[INFO] No leads to post")
         return
 
+    message = build_discord_message(leads)
+
     if DRY_RUN:
         print("[DRY RUN] Would post to Discord:")
-        for lead in leads:
-            print(json.dumps(lead, indent=2))
+        print(message)
         return
-
-    date_str = datetime.now(timezone.utc).strftime("%b %d, %Y")
-    embeds = []
-
-    for lead in leads:
-        linkedin_url = build_linkedin_url(lead.get("linkedin_search", lead.get("name", "")))
-        embed = {
-            "title": f"🚀 {lead.get('name', 'Unknown')}",
-            "color": 0x5865F2,
-            "fields": [
-                {
-                    "name": "Stage & Funding",
-                    "value": f"{lead.get('stage', '—')} · {lead.get('amount', '—')}",
-                    "inline": True,
-                },
-                {
-                    "name": "Published",
-                    "value": lead.get("hours_ago", "—"),
-                    "inline": True,
-                },
-                {
-                    "name": "What They Do",
-                    "value": lead.get("what_they_do", "—"),
-                    "inline": False,
-                },
-                {
-                    "name": "Why Imaginary Space",
-                    "value": lead.get("why_imaginary_space", "—"),
-                    "inline": False,
-                },
-                {
-                    "name": "Find the Founder",
-                    "value": f"[LinkedIn Search]({linkedin_url})",
-                    "inline": True,
-                },
-                {
-                    "name": "Source",
-                    "value": f"[Read Article]({lead.get('source_url', '#')})",
-                    "inline": True,
-                },
-            ],
-            "footer": {"text": f"Imaginary Space Intel · {date_str}"},
-        }
-        embeds.append(embed)
 
     payload = {
         "username": "Startup Intel",
-        "avatar_url": "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f680.png",
-        "embeds": embeds,
+        "content": message,
     }
 
     resp = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
