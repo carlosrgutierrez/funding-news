@@ -1,0 +1,58 @@
+{
+  "processed_urls": [
+    "https://www.joinloopback.com/",
+    "https://www.cnbc.com/2026/04/27/deepmind-ineffable-intelligence-record-seed-funding-nvidia-google.html",
+    "https://www.bloomberg.com/news/articles/2026-03-10/yann-lecun-s-new-ai-startup-raises-1-billion-in-seed-funding",
+    "https://www.opc.community/funding",
+    "https://techcrunch.com/2026/05/06/khosla-backed-robotics-startup-genesis-ai-has-gone-full-stack-demo-shows/",
+    "https://news.ycombinator.com/item?id=47726833",
+    "https://techcrunch.com/2026/04/30/legal-ai-startup-legora-hits-5-6-valuation-and-its-battle-with-harvey-just-got-hotter/",
+    "https://hooked.news/",
+    "https://techcrunch.com/2026/04/30/y-combinator-alum-skio-sells-for-105m-cash-only-raised-8m-founder-says/",
+    "https://news.ycombinator.com/item?id=47388387"
+  ],
+  "blacklist_domains": [],
+  "last_7_reports": [
+    {
+      "name": "Ineffable",
+      "stage": "Seed",
+      "amount": "$1.1B",
+      "what_they_do": "AI startup founded by ex-DeepMind David Silver",
+      "why_imaginary_space": "May need help building out their product quickly with their large seed funding",
+      "linkedin_search": "David Silver Imaginary Space CEO",
+      "source_url": "https://www.cnbc.com/2026/04/27/deepmind-ineffable-intelligence-record-seed-funding-nvidia-google.html",
+      "hours_ago": "~10d"
+    },
+    {
+      "name": "Yann LeCun's AI startup",
+      "stage": "Seed",
+      "amount": "$1B",
+      "what_they_do": "AI startup founded by Yann LeCun",
+      "why_imaginary_space": "May need help building out their product quickly with their large seed funding",
+      "linkedin_search": "Yann LeCun Imaginary Space CEO",
+      "source_url": "https://www.bloomberg.com/news/articles/2026-03-10/yann-lecun-s-new-ai-startup-raises-1-billion-in-seed-funding",
+      "hours_ago": "~27d"
+    }
+  ],
+  "preferences": {
+    "target_keywords": [
+      "AI",
+      "SaaS",
+      "B2B",
+      "Fintech",
+      "marketplace",
+      "developer tools",
+      "automation"
+    ],
+    "ignored_keywords": [
+      "Crypto",
+      "Biotech",
+      "Series B",
+      "Series C",
+      "Series D",
+      "IPO",
+      "acquisition"
+    ]
+  },
+  "last_run": "2026-05-06T21:12:10.271127+00:00"
+}
