@@ -534,7 +534,7 @@ def normalize_amount(raw: str | None) -> str:
 def build_discord_message(events: list[dict], cfg: dict, window_hours: int) -> str:
     now = datetime.now(timezone.utc)
     date_str = now.strftime("%B %d, %Y")
-    lines = [f"Startup Intelligence | {date_str} | last {window_hours}h", ""]
+    lines = [f"Recent News | {date_str} | last {window_hours}h", ""]
 
     for ev in events:
         company     = ev.get("company", "Unknown")
