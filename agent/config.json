@@ -1,0 +1,9 @@
+{
+  "icp": "Early-stage founders (Pre-seed to Seed) who just raised and need to ship an MVP or v1 product fast. They have money but no engineering team or too slow a team. They are technical enough to know what they want but need execution speed.",
+  "amount_min_usd": 250000,
+  "amount_max_usd": 5000000,
+  "extra_target_keywords": [],
+  "extra_ignored_keywords": [],
+  "extra_signal_hints": "",
+  "notes": "Edit this file on GitHub.com to tune the agent without touching code. The agent reads this before every run and confirms what it loaded in the Discord footer."
+}

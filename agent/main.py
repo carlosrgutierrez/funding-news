@@ -23,6 +23,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")
 DRY_RUN = os.getenv("DRY_RUN", "false").lower() in ("1", "true", "yes")
 MEMORY_PATH = os.path.join(os.path.dirname(__file__), "memory.json")
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 MAX_CANDIDATES = 30
 TARGET_LEADS = 10   # Groq will filter down; we want enough raw input
 MAX_OUTREACH = 4    # Max companies in the outreach section
@@ -50,6 +51,30 @@ HARD_DISCARD = [
     "ipo", "nasdaq", "nyse", "acqui", "acquisition", "public offering",
     "crypto", "blockchain", "nft", "biotech", "pharmaceutical",
 ]
+
+# ─── Config file ─────────────────────────────────────────────────────────────
+
+DEFAULT_CONFIG = {
+    "icp": "Early-stage founders who just raised and need to ship an MVP fast.",
+    "amount_min_usd": 250000,
+    "amount_max_usd": 5000000,
+    "extra_target_keywords": [],
+    "extra_ignored_keywords": [],
+    "extra_signal_hints": "",
+}
+
+def load_config() -> dict:
+    try:
+        with open(CONFIG_PATH) as f:
+            cfg = json.load(f)
+        print(f"[CONFIG] Loaded: ICP set | range ${cfg.get('amount_min_usd',250000)//1000}K–${cfg.get('amount_max_usd',5000000)//1000000}M | extra_keywords={cfg.get('extra_target_keywords',[])} | hints={'yes' if cfg.get('extra_signal_hints') else 'none'}")
+        return {**DEFAULT_CONFIG, **cfg}
+    except FileNotFoundError:
+        print("[CONFIG] config.json not found — using defaults")
+        return DEFAULT_CONFIG
+    except Exception as ex:
+        print(f"[CONFIG] Parse error: {ex} — using defaults")
+        return DEFAULT_CONFIG
 
 # ─── Memory ──────────────────────────────────────────────────────────────────
 
@@ -198,120 +223,90 @@ def normalize_amount(raw: str) -> str:
 
 # ─── Groq pipeline ───────────────────────────────────────────────────────────
 
-def build_analysis_prompt(candidates: list[dict], last_7_reports: list) -> str:
+def build_pass1_prompt(candidates: list[dict], last_7_reports: list, cfg: dict = None) -> str:
+    cfg = cfg or DEFAULT_CONFIG
     news_block = "\n\n".join(
         f"[{i+1}] SOURCE: {c['source']}\nTITLE: {c['title']}\nSUMMARY: {c['summary'][:350]}\nURL: {c['url']}"
         for i, c in enumerate(candidates)
     )
-    skip = ", ".join(r.get("name", "") for r in last_7_reports if r.get("name"))
+    skip_names = [r.get("company") or r.get("name", "") for r in last_7_reports]
+    skip = ", ".join(n for n in skip_names if n)
     skip_line = f"\nREJECT these (already reported this week): {skip}" if skip else ""
+    amount_max = cfg["amount_max_usd"]
+    amount_max_str = f"${amount_max // 1_000_000}M"
+    extra_hints = f"\nExtra signal hints from config: {cfg['extra_signal_hints']}" if cfg.get("extra_signal_hints") else ""
 
-    return f"""You are operating a strict data pipeline. Your job is to transform noisy startup news into structured lead data. No creativity. No gap-filling. If data is missing or weak, reject the company.
+    return f"""You are a lead intelligence analyst for Imaginary Space — an enterprise AI development studio that ships RAG pipelines, AI agents, and full-stack applications in 4–12 weeks.
 
---- STEP 1: HARD REJECTION ---
+You will receive a list of startup funding articles. Your job is to extract only the leads that match our ICP and assign them ONE accurate signal.
 
-Include a company ONLY if ALL conditions are true:
-- Contains a clear funding event (raised, secured, closed a round)
-- Funding amount is EXPLICITLY stated in the article
-- Funding is between $250K and $5M USD (convert currencies if needed; reject if above $5M)
-- Stage is Pre-seed, Seed, or Series A at most
-- Source is credible (TechCrunch, VentureBeat, Sifted, Crunchbase, EU Startups, HN)
+ICP: Founders who just raised Pre-seed or Seed ($250K–{amount_max_str}), are in a build phase, and likely lack the engineering bandwidth to ship AI fast.
+{extra_hints}
 
-REJECT if:
-- No funding amount stated
-- Amount is above $3M
-- Famous founders or well-known companies
-- Opinion pieces, product launches, or announcements without funding
-- Quantum computing, biotech, defense, deep tech research labs{skip_line}
+HARD REJECTION RULES — discard any lead that:
+- Raised Series A or later
+- Is a hardware, biotech, or pure fintech company with no software build need
+- Has an established engineering team already mentioned
+- Amount is not explicitly stated or is above {amount_max_str}
+- Opinion piece, product launch, or announcement without a funding event{skip_line}
 
---- STEP 2: DATA NORMALIZATION ---
+FOR EACH QUALIFYING LEAD OUTPUT EXACTLY THIS JSON OBJECT:
+{{
+  "company": "string",
+  "amount": "string (e.g. $3.7M — convert currencies to USD)",
+  "stage": "Pre-seed or Seed",
+  "description": "one sentence, what the product does and who it serves",
+  "signal": "one of the signals below — pick the most accurate one",
+  "url": "original article URL"
+}}
 
-For each accepted company:
-- Amount: convert to USD millions. Examples: €1M = $1.1M, €2.8M = $3.1M, $750K = $0.75M
-- Round: must be Pre-seed, Seed, or Series A. If unclear, reject.
-- Founder: if missing, use "{{Company}} CEO"
-- UVP: one plain sentence, no buzzwords, no fluff
+SIGNAL OPTIONS — pick exactly one per lead:
+- "just funded, no product yet" — raise announced but no live product mentioned
+- "building with AI, no technical co-founder" — non-technical founder in an AI space
+- "shipping fast pressure" — language in article suggests urgency to ship or compete
+- "enterprise client waiting" — article mentions a customer or pilot already signed
+- "replacing manual process with AI" — clear automation or workflow replacement use case
+- "expanding to new market" — raise specifically for geographic or vertical expansion
 
---- STEP 3 + 4: OUTREACH MESSAGES ---
-
-For max {MAX_OUTREACH} of the accepted companies, write a cold DM.
-
-BANNED phrases (hard reject any message containing):
-- "You're building"
-- "Interesting"
-- "Curious about"
-- "Love what"
-- Any compliment or flattery
-- Restating the company description
-
-Each message MUST:
-1. Open with a specific observation about their stage and operational challenge
-2. Be max 3 sentences
-3. End with exactly one direct question about a growth bottleneck
-4. Use at most one emoji
-5. Be peer-to-peer, not salesy
-
-Signal mapping (use the right one, no guessing):
-- Pre-seed: unclear ICP, early distribution, validating product
-- Seed: finding repeatable acquisition channel, early scaling issues
-- AI company: distribution problem (tech is commoditized, differentiation missing)
-- Marketplace: supply-demand imbalance, retention
-- Health/regulated: slow sales cycles, compliance friction
-
-BAD signal: "needs to scale"
-GOOD signal: "has not found a repeatable acquisition channel yet"
-
---- STEP 5: SELF-REWRITE ---
-
-After generating your output, rewrite every message that:
-- Contains any banned phrase
-- Has a weak or vague signal
-- Opens with a compliment
-- Restates the company description
-- Uses an em-dash
-
-Do NOT validate. REWRITE.
-
---- OUTPUT ---
-
-Return ONLY a valid JSON array, no markdown fences, no explanation:
-
-[
-  {{
-    "name": "Startup Name",
-    "stage": "Seed",
-    "amount": "$1.5M",
-    "uvp": "One plain sentence.",
-    "founder": "First Last",
-    "source_url": "https://...",
-    "signal": "has not found a repeatable acquisition channel yet",
-    "outreach_message": "2-3 sentence DM ending with a question.",
-    "include_outreach": true
-  }}
-]
-
-Set "include_outreach": true for the top {MAX_OUTREACH} companies only. Set false for the rest.
-If nothing qualifies after filtering, return [].
+DO NOT use "has not found a repeatable acquisition channel" — that is not our signal.
+DO NOT invent signals outside the list above.
+OUTPUT ONLY a valid JSON array. No explanation, no markdown, no extra text.
 
 NEWS ITEMS:
 {news_block}"""
 
 
-def build_rewrite_prompt(leads: list[dict]) -> str:
-    return f"""You are a strict editor. Check every outreach_message in this JSON for violations. Do NOT validate — REWRITE any message that breaks the rules.
+def build_pass2_prompt(lead: dict) -> str:
+    return f"""You are writing a cold LinkedIn DM on behalf of Carlos at Imaginary Space.
 
-Rules:
-1. No em-dashes. Replace with a comma or period.
-2. No banned openers: "You're building", "Interesting", "Curious", "Love what", any compliment.
-3. Must open with a specific observation about the company's stage and problem.
-4. Max 3 sentences. End with one question.
-5. Signal must be concrete: BAD "needs to scale" / GOOD "has not found a repeatable acquisition channel yet"
-6. Amount must be "$XM" or "$X.XM" format (e.g. "$1.5M", "$0.75M"). Fix if wrong.
-7. If founder is blank, "unknown", or "not specified", set to "{{name}} CEO".
+Imaginary Space ships production AI systems in 4–12 weeks. RAG pipelines, autonomous agents, full-stack applications. 50+ products shipped. Our ICP is a founder who just raised and needs to move fast on building.
 
-Return the corrected JSON array with identical structure. Return ONLY valid JSON, no markdown:
+You will receive one lead object. Write ONE outreach message that:
+- Opens with a specific observation about THIS company (not a generic line)
+- References the raise naturally — not as flattery, as context
+- Connects their signal to a specific thing Imaginary Space solves
+- Ends with one low-friction question (not "what's your biggest challenge")
+- Sounds like a peer talking to a peer — no corporate language
+- Is 3 sentences maximum
 
-{json.dumps(leads, indent=2)}"""
+ALSO output a LinkedIn search URL in this exact format:
+https://www.linkedin.com/search/results/people/?keywords={{CompanyName}}+CEO+founder
+
+Replace {{CompanyName}} with the company name only. No repetition. Do NOT add "CEO founder" after the company name if it is already in the URL.
+
+OUTPUT FORMAT (plain text, no JSON):
+{lead.get('company', 'Company')} | {lead.get('amount', '')} {lead.get('stage', '')}
+https://www.linkedin.com/search/results/people/?keywords={lead.get('company', '').replace(' ', '+')}+CEO+founder
+
+> [your message here]
+> Signal: {lead.get('signal', '')}
+
+DO NOT repeat the company name twice in the URL.
+DO NOT start the message with "As a seed-stage company".
+DO NOT use the word "challenges", "hurdles", or "acquisition channel".
+
+LEAD:
+{json.dumps(lead, indent=2)}"""
 
 
 def call_groq(prompt: str, max_tokens: int = 3000) -> str | None:
@@ -351,36 +346,32 @@ def parse_json_response(raw: str) -> list | None:
         return None
 
 
-def analyze_and_review(candidates: list[dict], last_7_reports: list) -> list[dict] | None:
+def analyze_and_review(candidates: list[dict], last_7_reports: list, cfg: dict = None) -> list[dict] | None:
     if DRY_RUN:
         print("[DRY RUN] Skipping Groq calls")
         return [
             {
-                "name": "Loops",
+                "company": "Loops",
                 "stage": "Seed",
                 "amount": "$2.1M",
-                "uvp": "Email platform built for SaaS products that replaces Mailchimp for product teams.",
-                "founder": "Chris Frantz",
-                "source_url": "https://techcrunch.com/example",
-                "signal": "has not found a repeatable acquisition channel beyond direct sales yet",
-                "outreach_message": "Most seed-stage SaaS founders I talk to realize 6 months in that their onboarding flow is killing activation before email even matters. What does your week-1 retention look like right now?",
-                "include_outreach": True,
+                "description": "Email platform built for SaaS products replacing Mailchimp for product teams.",
+                "signal": "replacing manual process with AI",
+                "url": "https://techcrunch.com/example",
+                "outreach_block": "Loops | $2.1M Seed\nhttps://www.linkedin.com/search/results/people/?keywords=Loops+CEO+founder\n\n> Most seed-stage SaaS founders ship email tooling last, then realize it's the thing killing activation. You raised to go fast — is the product-to-email handoff already wired or still manual?\n> Signal: replacing manual process with AI",
             },
             {
-                "name": "Finta",
+                "company": "Finta",
                 "stage": "Pre-seed",
                 "amount": "$1.8M",
-                "uvp": "Automates investor updates and cap table management for early-stage founders.",
-                "founder": "Ramy Adeeb",
-                "source_url": "https://techcrunch.com/example2",
-                "signal": "unclear ICP: targeting all founders when the real pain is felt by solo technical founders post-raise",
-                "outreach_message": "Pre-seed fintech tools usually die on ICP clarity before they hit distribution. Who is the one founder profile you are seeing close fastest right now?",
-                "include_outreach": True,
+                "description": "Automates investor updates and cap table management for early-stage founders.",
+                "signal": "just funded, no product yet",
+                "url": "https://techcrunch.com/example2",
+                "outreach_block": "Finta | $1.8M Pre-seed\nhttps://www.linkedin.com/search/results/people/?keywords=Finta+CEO+founder\n\n> Cap table tooling at pre-seed usually gets built last, right after the thing that actually closes the next round. What does your current investor reporting look like?\n> Signal: just funded, no product yet",
             },
         ]
 
-    print(f"[INFO] Pass 1: analysis — {len(candidates)} candidates")
-    raw1 = call_groq(build_analysis_prompt(candidates, last_7_reports))
+    print(f"[INFO] Pass 1: extraction — {len(candidates)} candidates")
+    raw1 = call_groq(build_pass1_prompt(candidates, last_7_reports, cfg))
     if raw1 is None:
         return None
 
@@ -391,33 +382,26 @@ def analyze_and_review(candidates: list[dict], last_7_reports: list) -> list[dic
         print("[INFO] No qualifying leads after filtering")
         return []
 
-    print(f"[INFO] Pass 1: {len(leads)} lead(s) — running rewrite pass")
+    print(f"[INFO] Pass 1: {len(leads)} lead(s) — running outreach pass (per-lead)")
 
-    raw2 = call_groq(build_rewrite_prompt(leads), max_tokens=2500)
-    if raw2 is None:
-        print("[WARN] Rewrite pass failed — using pass 1 output")
-        return leads
+    # Pass 2: one Groq call per lead, up to MAX_OUTREACH
+    for i, lead in enumerate(leads[:MAX_OUTREACH]):
+        raw2 = call_groq(build_pass2_prompt(lead), max_tokens=400)
+        if raw2:
+            lead["outreach_block"] = raw2.strip()
+            print(f"[INFO] Pass 2: outreach written for {lead.get('company', '?')}")
+        else:
+            print(f"[WARN] Pass 2: failed for {lead.get('company', '?')} — skipping outreach")
 
-    rewritten = parse_json_response(raw2)
-    if rewritten is None:
-        print("[WARN] Rewrite pass returned invalid JSON — using pass 1 output")
-        return leads
-
-    print(f"[INFO] Pass 2: rewrite complete — {len(rewritten)} lead(s)")
-    return rewritten
+    print(f"[INFO] Pipeline complete — {len(leads)} lead(s)")
+    return leads
 
 # ─── Discord formatter ───────────────────────────────────────────────────────
 
 def no_emdash(text: str) -> str:
     return text.replace("—", "-").replace("–", "-")
 
-def linkedin_url(founder: str, company: str) -> str:
-    # Use angle brackets to suppress Discord unfurl
-    name = founder if founder and founder.lower() not in ("unknown", "not specified", "") else ""
-    query = f"{name} {company} CEO founder".strip().replace(" ", "+")
-    return f"<https://www.linkedin.com/search/results/people/?keywords={query}>"
-
-def build_discord_message(leads: list[dict]) -> str:
+def build_discord_message(leads: list[dict], cfg: dict = None) -> str:
     date_str = datetime.now(timezone.utc).strftime("%B %d, %Y")
     count = len(leads)
 
@@ -427,55 +411,49 @@ def build_discord_message(leads: list[dict]) -> str:
         "",
     ]
     for lead in leads:
-        name = no_emdash(lead.get("name", "Unknown"))
+        name = no_emdash(lead.get("company", "Unknown"))
         amount = normalize_amount(lead.get("amount", ""))
         stage = lead.get("stage", "")
-        uvp = no_emdash(lead.get("uvp", ""))
-        lines.append(f"📌 {name} raised {amount} {stage} - {uvp}")
+        desc = no_emdash(lead.get("description", ""))
+        lines.append(f"📌 {name} raised {amount} {stage} - {desc}")
 
     lines += ["", "Cold Outreach Angles", ""]
 
-    # ── Section 2: outreach (max MAX_OUTREACH, must fit in char limit) ───────
+    # ── Section 2: outreach blocks written by Pass 2 ─────────────────────────
     outreach_included = 0
     for lead in leads:
-        if not lead.get("include_outreach"):
+        block_text = lead.get("outreach_block", "")
+        if not block_text:
             continue
         if outreach_included >= MAX_OUTREACH:
             break
 
-        name = no_emdash(lead.get("name", "Unknown"))
-        amount = normalize_amount(lead.get("amount", ""))
-        stage = lead.get("stage", "")
-        founder = lead.get("founder", "") or f"{name} CEO"
-        li = linkedin_url(founder, name)
-        msg = no_emdash(lead.get("outreach_message", ""))
-        signal = no_emdash(lead.get("signal", ""))
-
-        block = [
-            f"🎯 Potential Message",
-            f"{name} | {amount} {stage}",
-            li,
-            "",
-            f"> {msg}",
-            f"> Signal: {signal}",
-            "",
-        ]
+        block = ["🎯 Potential Message", no_emdash(block_text), ""]
         candidate = "\n".join(lines + block)
         if len(candidate) > MAX_MESSAGE_CHARS:
             break
         lines += block
         outreach_included += 1
 
+    # ── Footer: active config confirmation ───────────────────────────────────
+    cfg = cfg or DEFAULT_CONFIG
+    min_str = f"${cfg['amount_min_usd'] // 1000}K" if cfg["amount_min_usd"] < 1_000_000 else f"${cfg['amount_min_usd'] // 1_000_000}M"
+    max_str = f"${cfg['amount_max_usd'] // 1_000_000}M"
+    kw = cfg.get("extra_target_keywords", [])
+    hints = " | hints on" if cfg.get("extra_signal_hints") else ""
+    kw_str = f" | +{','.join(kw)}" if kw else ""
+    lines.append(f"\n⚙️ Config: range {min_str}–{max_str}{kw_str}{hints}")
+
     return "\n".join(lines).strip()
 
 # ─── Post ────────────────────────────────────────────────────────────────────
 
-def post_to_discord(leads: list[dict]) -> None:
+def post_to_discord(leads: list[dict], cfg: dict = None) -> None:
     if not leads:
         print("[INFO] No leads — nothing to post")
         return
 
-    message = build_discord_message(leads)
+    message = build_discord_message(leads, cfg)
 
     if DRY_RUN:
         print("[DRY RUN] Discord message preview:")
@@ -500,7 +478,18 @@ def post_to_discord(leads: list[dict]) -> None:
 def run():
     print(f"[INFO] Agent start | dry_run={DRY_RUN} | {datetime.now(timezone.utc).isoformat()}")
 
+    cfg = load_config()
     memory = load_memory()
+
+    # Merge extra keywords from config into the filter
+    if cfg.get("extra_target_keywords"):
+        for kw in cfg["extra_target_keywords"]:
+            if kw.lower() not in STAGE_KEYWORDS:
+                STAGE_KEYWORDS.append(kw.lower())
+    if cfg.get("extra_ignored_keywords"):
+        memory["preferences"]["ignored_keywords"] = list(set(
+            memory["preferences"].get("ignored_keywords", []) + cfg["extra_ignored_keywords"]
+        ))
 
     raw_items = fetch_all_sources()
     print(f"[INFO] Total fetched: {len(raw_items)}")
@@ -512,13 +501,13 @@ def run():
         save_memory(memory)
         return
 
-    leads = analyze_and_review(candidates, memory.get("last_7_reports", []))
+    leads = analyze_and_review(candidates, memory.get("last_7_reports", []), cfg)
     if leads is None:
         print("[ERROR] Groq failed — memory not updated so articles can be retried tomorrow.")
         return
 
     print(f"[INFO] Final leads: {len(leads)}")
-    post_to_discord(leads)
+    post_to_discord(leads, cfg)
 
     if DRY_RUN:
         print("[DRY RUN] Skipping memory save.")
