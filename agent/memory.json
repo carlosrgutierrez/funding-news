@@ -1,78 +1,10 @@
 {
-  "processed_urls": [
-    "https://news.crunchbase.com/venture/global-startup-funding-april-2026-anthropic-jeff-bezos-project-prometheus-biggest-deals/",
-    "https://techcrunch.com/2026/05/06/ethos-raises-22-75m-from-a16z-for-its-expert-network-with-voice-onboarding/",
-    "https://techcrunch.com/2026/05/06/deepseek-could-hit-45b-valuation-from-its-first-investment-round/",
-    "https://techcrunch.com/2026/05/06/snap-says-its-400m-deal-with-perplexity-amicably-ended/",
-    "https://techcrunch.com/2026/05/06/apple-to-pay-250m-to-settle-lawsuit-over-siris-delayed-ai-features/",
-    "https://news.crunchbase.com/ai/blitzy-funding-valuation-autonomous-software-development-vibe-coding-startups/",
-    "https://www.eu-startups.com/2026/05/frances-opsmill-raises-e11-9-million-to-help-enterprises-prepare-infrastructure-data-for-ai-and-automation/",
-    "https://news.crunchbase.com/fintech/amex-ventures-portfolio-strategy-agentic-ai-startups-kevin-tsang/",
-    "https://techcrunch.com/2026/05/06/insurance-startup-corgi-hits-1-3b-valuation-4-months-after-its-series-a/",
-    "https://www.eu-startups.com/2026/05/london-based-codewords-raises-e7-6-million-to-help-businesses-run-on-ai-autopilot/",
-    "https://www.eu-startups.com/2026/05/french-ai-real-estate-startup-davis-raises-e4-6-million-and-unveils-gaudi-1-for-automated-architectural-generation/",
-    "https://venturebeat.com/security/one-command-open-source-repo-ai-agent-backdoor-openclaw-supply-chain-scanner",
-    "https://news.crunchbase.com/startups/ai-is-rewriting-what-investors-should-look-for-in-early-startup-teams/",
-    "https://techcrunch.com/2026/05/05/altara-secures-7m-to-bridge-the-data-gap-thats-slowing-down-physical-sciences/",
-    "https://www.eu-startups.com/2026/05/swiss-startup-moonlight-ai-raises-e2-8-million-to-turn-routine-blood-and-cytology-imaging-into-genomic-insights/",
-    "https://www.eu-startups.com/2026/05/stockholms-pit-exits-stealth-with-e13-6-million-a16z-led-funding-to-offer-ai-product-teams-as-a-service/",
-    "https://techcrunch.com/2026/05/06/khosla-backed-robotics-startup-genesis-ai-has-gone-full-stack-demo-shows/",
-    "https://techcrunch.com/2026/05/05/4-days-left-get-50-off-a-second-techcrunch-disrupt-2026-pass-to-make-more-deals-faster/",
-    "https://techcrunch.com/2026/05/06/a-20-minute-pitch-wins-indian-startup-pronto-backing-from-lachy-groom/",
-    "https://www.eu-startups.com/2026/05/quantware-raises-e152-million-in-the-largest-private-round-for-a-dedicated-quantum-processor-company/",
-    "https://www.eu-startups.com/2026/05/spains-humara-raises-e1-2-million-to-cut-waste-plant-design-cycles-from-months-to-days-with-ai-saas/",
-    "https://venturebeat.com/orchestration/scaling-ai-into-production-is-forcing-a-rethink-of-enterprise-infrastructure",
-    "https://venturebeat.com/orchestration/gpt-5-5-instant-shows-you-what-it-remembered-just-not-all-of-it",
-    "https://venturebeat.com/technology/miami-startup-subquadratic-claims-1-000x-ai-efficiency-gain-with-subq-model-researchers-demand-independent-proof",
-    "https://techcrunch.com/2026/05/05/elevenlabs-lists-blackrock-jamie-foxx-and-eva-longoria-as-new-investors/"
-  ],
+  "processed_urls": [],
   "blacklist_domains": [],
-  "seen_companies": [
-    {
-      "company": "Altara",
-      "date_seen": "2026-05-07"
-    },
-    {
-      "company": "Ethos",
-      "date_seen": "2026-05-07"
-    },
-    {
-      "company": "Subquadratic",
-      "date_seen": "2026-05-07"
-    },
-    {
-      "company": "CodeWords",
-      "date_seen": "2026-05-07"
-    },
-    {
-      "company": "Pit",
-      "date_seen": "2026-05-07"
-    },
-    {
-      "company": "OpsMill",
-      "date_seen": "2026-05-07"
-    },
-    {
-      "company": "Moonlight AI",
-      "date_seen": "2026-05-07"
-    },
-    {
-      "company": "Humara",
-      "date_seen": "2026-05-07"
-    },
-    {
-      "company": "Davis",
-      "date_seen": "2026-05-07"
-    }
-  ],
+  "seen_companies": [],
   "preferences": {
     "target_keywords": [],
-    "ignored_keywords": [
-      "crypto",
-      "blockchain",
-      "nft",
-      "pharmaceutical"
-    ]
+    "ignored_keywords": ["crypto", "blockchain", "nft", "pharmaceutical"]
   },
-  "last_run": "2026-05-07T13:42:56.938906+00:00"
+  "last_run": null
 }
