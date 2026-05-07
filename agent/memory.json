@@ -1,102 +1,78 @@
 {
   "processed_urls": [
-    "https://news.crunchbase.com/seed/us-startup-venture-funding-boom-concentration-bay-area/",
-    "https://www.eu-startups.com/2026/05/french-ai-real-estate-startup-davis-raises-e4-6-million-and-unveils-gaudi-1-for-automated-architectural-generation/",
-    "https://sifted.eu/articles/groove-quantum-16m-seed/",
-    "https://www.eu-startups.com/2026/05/swiss-startup-moonlight-ai-raises-e2-8-million-to-turn-routine-blood-and-cytology-imaging-into-genomic-insights/",
-    "https://www.eu-startups.com/2026/05/germanys-eleqtron-raises-e57-million-series-a-to-scale-quantum-computing-systems-for-industrial-applications/",
-    "https://www.eu-startups.com/2026/05/spains-humara-raises-e1-2-million-to-cut-waste-plant-design-cycles-from-months-to-days-with-ai-saas/",
-    "https://techcrunch.com/2026/04/30/y-combinator-alum-skio-sells-for-105m-cash-only-raised-8m-founder-says/",
-    "https://sifted.eu/articles/y-combinator-alum-moritz-raises-9m/",
     "https://news.crunchbase.com/venture/global-startup-funding-april-2026-anthropic-jeff-bezos-project-prometheus-biggest-deals/",
-    "https://news.crunchbase.com/venture/supabase-startup-investment-dreambase-ai-felicis/",
-    "https://news.ycombinator.com/item?id=47865757",
-    "https://www.eu-startups.com/2026/05/paris-based-lithosquare-raises-e21-4-million-to-accelerate-transition-critical-mineral-discovery-with-geology-ai/",
-    "https://news.ycombinator.com/item?id=47388387",
-    "https://www.cnbc.com/2026/04/27/deepmind-ineffable-intelligence-record-seed-funding-nvidia-google.html",
-    "https://news.crunchbase.com/venture/biggest-funding-rounds-defense-aerospace-ai-fintech/",
-    "https://news.ycombinator.com/item?id=47718079",
-    "https://sylixide.com",
     "https://techcrunch.com/2026/05/06/ethos-raises-22-75m-from-a16z-for-its-expert-network-with-voice-onboarding/",
-    "https://sifted.eu/articles/qutwo-hugging-face-legora-funding-round/",
-    "https://techcrunch.com/2026/05/06/khosla-backed-robotics-startup-genesis-ai-has-gone-full-stack-demo-shows/",
-    "https://venturebeat.com/technology/ai-agents-are-missing-all-the-discussions-your-team-is-having-sageox-has-an-answer-agentic-context-infrastructure",
-    "https://news.ycombinator.com/item?id=47278980",
-    "https://www.bloomberg.com/news/articles/2026-03-10/yann-lecun-s-new-ai-startup-raises-1-billion-in-seed-funding",
-    "https://www.eu-startups.com/2026/05/south-tyrols-profitize-raises-e1-4-million-to-scale-ai-powered-financial-planning-for-the-hospitality-sector/",
-    "https://www.eu-startups.com/2026/05/waiv-robotics-emerges-from-stealth-with-e6-4-million-to-develop-autonomous-uav-landing-infrastructure/",
+    "https://techcrunch.com/2026/05/06/deepseek-could-hit-45b-valuation-from-its-first-investment-round/",
+    "https://techcrunch.com/2026/05/06/snap-says-its-400m-deal-with-perplexity-amicably-ended/",
+    "https://techcrunch.com/2026/05/06/apple-to-pay-250m-to-settle-lawsuit-over-siris-delayed-ai-features/",
     "https://news.crunchbase.com/ai/blitzy-funding-valuation-autonomous-software-development-vibe-coding-startups/",
-    "https://news.ycombinator.com/item?id=47267559",
-    "https://sifted.eu/articles/lithosquare-critical-metals-fundraise/",
-    "https://techcrunch.com/2026/04/30/legal-ai-startup-legora-hits-5-6-valuation-and-its-battle-with-harvey-just-got-hotter/",
-    "https://venturebeat.com/technology/miami-startup-subquadratic-claims-1-000x-ai-efficiency-gain-with-subq-model-researchers-demand-independent-proof"
+    "https://www.eu-startups.com/2026/05/frances-opsmill-raises-e11-9-million-to-help-enterprises-prepare-infrastructure-data-for-ai-and-automation/",
+    "https://news.crunchbase.com/fintech/amex-ventures-portfolio-strategy-agentic-ai-startups-kevin-tsang/",
+    "https://techcrunch.com/2026/05/06/insurance-startup-corgi-hits-1-3b-valuation-4-months-after-its-series-a/",
+    "https://www.eu-startups.com/2026/05/london-based-codewords-raises-e7-6-million-to-help-businesses-run-on-ai-autopilot/",
+    "https://www.eu-startups.com/2026/05/french-ai-real-estate-startup-davis-raises-e4-6-million-and-unveils-gaudi-1-for-automated-architectural-generation/",
+    "https://venturebeat.com/security/one-command-open-source-repo-ai-agent-backdoor-openclaw-supply-chain-scanner",
+    "https://news.crunchbase.com/startups/ai-is-rewriting-what-investors-should-look-for-in-early-startup-teams/",
+    "https://techcrunch.com/2026/05/05/altara-secures-7m-to-bridge-the-data-gap-thats-slowing-down-physical-sciences/",
+    "https://www.eu-startups.com/2026/05/swiss-startup-moonlight-ai-raises-e2-8-million-to-turn-routine-blood-and-cytology-imaging-into-genomic-insights/",
+    "https://www.eu-startups.com/2026/05/stockholms-pit-exits-stealth-with-e13-6-million-a16z-led-funding-to-offer-ai-product-teams-as-a-service/",
+    "https://techcrunch.com/2026/05/06/khosla-backed-robotics-startup-genesis-ai-has-gone-full-stack-demo-shows/",
+    "https://techcrunch.com/2026/05/05/4-days-left-get-50-off-a-second-techcrunch-disrupt-2026-pass-to-make-more-deals-faster/",
+    "https://techcrunch.com/2026/05/06/a-20-minute-pitch-wins-indian-startup-pronto-backing-from-lachy-groom/",
+    "https://www.eu-startups.com/2026/05/quantware-raises-e152-million-in-the-largest-private-round-for-a-dedicated-quantum-processor-company/",
+    "https://www.eu-startups.com/2026/05/spains-humara-raises-e1-2-million-to-cut-waste-plant-design-cycles-from-months-to-days-with-ai-saas/",
+    "https://venturebeat.com/orchestration/scaling-ai-into-production-is-forcing-a-rethink-of-enterprise-infrastructure",
+    "https://venturebeat.com/orchestration/gpt-5-5-instant-shows-you-what-it-remembered-just-not-all-of-it",
+    "https://venturebeat.com/technology/miami-startup-subquadratic-claims-1-000x-ai-efficiency-gain-with-subq-model-researchers-demand-independent-proof",
+    "https://techcrunch.com/2026/05/05/elevenlabs-lists-blackrock-jamie-foxx-and-eva-longoria-as-new-investors/"
   ],
   "blacklist_domains": [],
-  "last_7_reports": [
+  "seen_companies": [
     {
-      "name": "Dreambase",
-      "stage": "Seed",
-      "amount": "$3.7M",
-      "uvp": "AI-powered analytics platform for data-driven companies",
-      "founder": "Dreambase CEO",
-      "source_url": "https://news.crunchbase.com/venture/supabase-startup-investment-dreambase-ai-felicis/",
-      "signal": "has not found a repeatable acquisition channel yet",
-      "outreach_message": "As a seed-stage company with $3.7M in funding, Dreambase is likely facing challenges in finding a repeatable acquisition channel. What's the biggest hurdle you're experiencing in scaling your customer base?",
-      "include_outreach": true
+      "company": "Altara",
+      "date_seen": "2026-05-07"
     },
     {
-      "name": "Moonlight AI",
-      "stage": "Seed",
-      "amount": "$3.3M",
-      "uvp": "Image analysis software for clinical-grade diagnostics",
-      "founder": "Moonlight AI CEO",
-      "source_url": "https://www.eu-startups.com/2026/05/swiss-startup-moonlight-ai-raises-e2-8-million-to-turn-routine-blood-and-cytology-imaging-into-genomic-insights/",
-      "signal": "has not found a repeatable acquisition channel yet",
-      "outreach_message": "As a seed-stage company with $3.3M in funding, Moonlight AI is likely facing challenges in finding a repeatable acquisition channel. What's the biggest hurdle you're experiencing in scaling your customer base?",
-      "include_outreach": true
+      "company": "Ethos",
+      "date_seen": "2026-05-07"
     },
     {
-      "name": "Humara",
-      "stage": "Seed",
-      "amount": "$1.4M",
-      "uvp": "AI-powered financial planning and analysis platform for hospitality industry",
-      "founder": "Humara CEO",
-      "source_url": "https://www.eu-startups.com/2026/05/spains-humara-raises-e1-2-million-to-cut-waste-plant-design-cycles-from-months-to-days-with-ai-saas/",
-      "signal": "has not found a repeatable acquisition channel yet",
-      "outreach_message": "As a seed-stage company with $1.4M in funding, Humara is likely facing challenges in finding a repeatable acquisition channel. What's the biggest hurdle you're experiencing in scaling your customer base?",
-      "include_outreach": true
+      "company": "Subquadratic",
+      "date_seen": "2026-05-07"
     },
     {
-      "name": "profitize",
-      "stage": "Seed",
-      "amount": "$1.7M",
-      "uvp": "AI-powered financial planning and analysis platform for hospitality industry",
-      "founder": "profitize CEO",
-      "source_url": "https://www.eu-startups.com/2026/05/south-tyrols-profitize-raises-e1-4-million-to-scale-ai-powered-financial-planning-for-the-hospitality-sector/",
-      "signal": "has not found a repeatable acquisition channel yet",
-      "outreach_message": "As a seed-stage company with $1.7M in funding, profitize is likely facing challenges in finding a repeatable acquisition channel. What's the biggest hurdle you're experiencing in scaling your customer base?",
-      "include_outreach": true
+      "company": "CodeWords",
+      "date_seen": "2026-05-07"
+    },
+    {
+      "company": "Pit",
+      "date_seen": "2026-05-07"
+    },
+    {
+      "company": "OpsMill",
+      "date_seen": "2026-05-07"
+    },
+    {
+      "company": "Moonlight AI",
+      "date_seen": "2026-05-07"
+    },
+    {
+      "company": "Humara",
+      "date_seen": "2026-05-07"
+    },
+    {
+      "company": "Davis",
+      "date_seen": "2026-05-07"
     }
   ],
   "preferences": {
-    "target_keywords": [
-      "AI",
-      "SaaS",
-      "B2B",
-      "Fintech",
-      "marketplace",
-      "developer tools",
-      "automation"
-    ],
+    "target_keywords": [],
     "ignored_keywords": [
-      "Crypto",
-      "Biotech",
-      "Series B",
-      "Series C",
-      "Series D",
-      "IPO",
-      "acquisition"
+      "crypto",
+      "blockchain",
+      "nft",
+      "pharmaceutical"
     ]
   },
-  "last_run": "2026-05-06T21:39:20.680023+00:00"
+  "last_run": "2026-05-07T13:42:56.938906+00:00"
 }

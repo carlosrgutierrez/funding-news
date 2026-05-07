@@ -1,58 +1,89 @@
 """
 Startup Intelligence Agent for Imaginary Space.
-Pipeline: fetch -> pre-filter -> Groq analysis -> Groq review -> Discord -> save memory.
+Pipeline: fetch -> pre-filter -> classify -> enrich -> extract -> post -> memory.
+
+Output: verified funding events from the last 48h. No inference. No generated URLs.
 """
 
 import json
 import os
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 import feedparser
 import requests
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from groq import Groq
 
 load_dotenv()
 
-# ─── Config ──────────────────────────────────────────────────────────────────
+# ─── Constants ────────────────────────────────────────────────────────────────
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_API_KEY        = os.getenv("GROQ_API_KEY", "")
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")
-DRY_RUN = os.getenv("DRY_RUN", "false").lower() in ("1", "true", "yes")
-MEMORY_PATH = os.path.join(os.path.dirname(__file__), "memory.json")
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
-MAX_CANDIDATES = 30
-TARGET_LEADS = 10   # Groq will filter down; we want enough raw input
-MAX_OUTREACH = 4    # Max companies in the outreach section
-MAX_MESSAGE_CHARS = 1800
+DRY_RUN             = os.getenv("DRY_RUN", "false").lower() in ("1", "true", "yes")
+MEMORY_PATH         = os.path.join(os.path.dirname(__file__), "memory.json")
+CONFIG_PATH         = os.path.join(os.path.dirname(__file__), "config.json")
+GROQ_MODEL          = "llama-3.3-70b-versatile"
+MAX_CANDIDATES      = 25
+MAX_ARTICLE_CHARS   = 1500
+MAX_MESSAGE_CHARS   = 1900
+SEEN_DAYS           = 7
+DATE_WINDOW_HOURS   = 48  # articles older than this are flagged stale; hard-filtered if > 5 days
+
+INJECTION_PATTERNS = [
+    r"ignore\s+(all\s+)?(previous|prior|above)\s+instructions",
+    r"forget\s+(all\s+)?(previous|prior|above|your)\s+instructions",
+    r"you\s+are\s+now\s+(a\s+)?(new|different)",
+    r"system\s*prompt\s*:",
+    r"override\s+(all\s+)?instructions",
+    r"jailbreak",
+    r"do\s+not\s+follow",
+    r"disregard\s+(all\s+)?(previous|prior)",
+    r"new\s+instructions?\s*:",
+    r"<\s*system\s*>",
+]
+
+# ─── Sources ──────────────────────────────────────────────────────────────────
 
 SOURCES = [
-    {"name": "TechCrunch Startups",  "url": "https://techcrunch.com/category/startups/feed/"},
-    {"name": "TechCrunch",           "url": "https://techcrunch.com/feed/"},
-    {"name": "VentureBeat",          "url": "https://venturebeat.com/feed/"},
-    {"name": "Crunchbase News",      "url": "https://news.crunchbase.com/feed/"},
-    {"name": "EU Startups",          "url": "https://www.eu-startups.com/feed/"},
-    {"name": "Sifted",               "url": "https://sifted.eu/feed"},
-    {"name": "HN Funding",           "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=seed+funding+startup&hitsPerPage=25"},
-    {"name": "HN Pre-seed",          "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=pre-seed+raise+startup&hitsPerPage=20"},
-    {"name": "Reddit r/startups",    "url": "https://www.reddit.com/r/startups.json?limit=25&t=day"},
-    {"name": "Reddit r/vc",          "url": "https://www.reddit.com/r/venturecapital.json?limit=25&t=day"},
+    {"name": "TechCrunch Startups", "url": "https://techcrunch.com/category/startups/feed/"},
+    {"name": "TechCrunch Funding",  "url": "https://techcrunch.com/tag/funding/feed/"},
+    {"name": "TechCrunch",          "url": "https://techcrunch.com/feed/"},
+    {"name": "Crunchbase News",     "url": "https://news.crunchbase.com/feed/"},
+    {"name": "VentureBeat",         "url": "https://venturebeat.com/feed/"},
+    {"name": "EU Startups",         "url": "https://www.eu-startups.com/feed/"},
+    {"name": "Sifted",              "url": "https://sifted.eu/feed"},
+    {"name": "HN Seed Funding",     "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=seed+funding+startup&hitsPerPage=25"},
+    {"name": "HN Pre-seed",         "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=pre-seed+raise+startup&hitsPerPage=20"},
+    {"name": "HN Raises",           "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=raises+seed+capital+2026&hitsPerPage=20"},
 ]
 
-# Pre-filter: must contain at least one of these to pass
-STAGE_KEYWORDS = ["seed", "pre-seed", "preseed", "angel", "raised", "raises", "funding", "pre seed"]
+STAGE_KEYWORDS = [
+    "seed", "pre-seed", "preseed", "pre seed", "angel",
+    "raised", "raises", "funding", "funded",
+    "secured", "secures", "closed", "closes",
+    "announced", "announces", "backed",
+    "investment", "invested", "investor",
+    "venture", "capital", "financing",
+    "million", "series a",
+    "oversubscribed", "round",
+    "launched", "launch", "debuts", "unveils",
+    "ships", "releases", "open source",
+]
 
-# Pre-filter: drop if contains any of these (obvious non-ICP, handled fast in Python)
 HARD_DISCARD = [
-    "series b", "series c", "series d", "series e", "series f",
-    "ipo", "nasdaq", "nyse", "acqui", "acquisition", "public offering",
-    "crypto", "blockchain", "nft", "biotech", "pharmaceutical",
+    "series d", "series e", "series f",
+    "ipo", "nasdaq", "nyse", "public offering",
+    "acqui", "acquisition",
+    "crypto", "blockchain", "nft",
+    "pharmaceutical",
 ]
 
-# ─── Config file ─────────────────────────────────────────────────────────────
+# ─── Config ───────────────────────────────────────────────────────────────────
 
 DEFAULT_CONFIG = {
     "icp": "Early-stage founders who just raised and need to ship an MVP fast.",
@@ -60,14 +91,16 @@ DEFAULT_CONFIG = {
     "amount_max_usd": 5000000,
     "extra_target_keywords": [],
     "extra_ignored_keywords": [],
-    "extra_signal_hints": "",
+    "window_hours": DATE_WINDOW_HOURS,
 }
 
 def load_config() -> dict:
     try:
         with open(CONFIG_PATH) as f:
             cfg = json.load(f)
-        print(f"[CONFIG] Loaded: ICP set | range ${cfg.get('amount_min_usd',250000)//1000}K–${cfg.get('amount_max_usd',5000000)//1000000}M | extra_keywords={cfg.get('extra_target_keywords',[])} | hints={'yes' if cfg.get('extra_signal_hints') else 'none'}")
+        min_k = cfg.get("amount_min_usd", 250000)
+        max_m = cfg.get("amount_max_usd", 5000000)
+        print(f"[CONFIG] Loaded: range ${min_k//1000}K–${max_m//1_000_000}M | window {cfg.get('window_hours', DATE_WINDOW_HOURS)}h")
         return {**DEFAULT_CONFIG, **cfg}
     except FileNotFoundError:
         print("[CONFIG] config.json not found — using defaults")
@@ -76,83 +109,166 @@ def load_config() -> dict:
         print(f"[CONFIG] Parse error: {ex} — using defaults")
         return DEFAULT_CONFIG
 
-# ─── Memory ──────────────────────────────────────────────────────────────────
+# ─── Memory ───────────────────────────────────────────────────────────────────
 
 def load_memory() -> dict:
-    with open(MEMORY_PATH) as f:
-        return json.load(f)
+    try:
+        with open(MEMORY_PATH) as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {
+            "processed_urls": [],
+            "blacklist_domains": [],
+            "seen_companies": [],
+            "preferences": {"target_keywords": [], "ignored_keywords": []},
+        }
 
 def save_memory(memory: dict) -> None:
     with open(MEMORY_PATH, "w") as f:
         json.dump(memory, f, indent=2)
 
-# ─── Fetch ───────────────────────────────────────────────────────────────────
+def is_company_seen(company: str, memory: dict) -> bool:
+    cutoff = (date.today() - timedelta(days=SEEN_DAYS)).isoformat()
+    name = company.lower().strip()
+    return any(
+        s["company"].lower().strip() == name and s["date_seen"] >= cutoff
+        for s in memory.get("seen_companies", [])
+    )
+
+def mark_company_seen(company: str, memory: dict) -> None:
+    if "seen_companies" not in memory:
+        memory["seen_companies"] = []
+    memory["seen_companies"].append({"company": company, "date_seen": date.today().isoformat()})
+    cutoff = (date.today() - timedelta(days=SEEN_DAYS)).isoformat()
+    memory["seen_companies"] = [s for s in memory["seen_companies"] if s["date_seen"] >= cutoff]
+
+# ─── Injection guard ──────────────────────────────────────────────────────────
+
+def sanitize(text: str) -> str:
+    if not text:
+        return ""
+    original = text
+    for pattern in INJECTION_PATTERNS:
+        text = re.sub(pattern, "[REDACTED]", text, flags=re.IGNORECASE)
+    if text != original:
+        print("[SECURITY] Injection pattern redacted")
+    return text
+
+# ─── Date helpers ─────────────────────────────────────────────────────────────
+
+def parse_rss_date(entry) -> datetime | None:
+    for attr in ("published_parsed", "updated_parsed"):
+        val = getattr(entry, attr, None)
+        if val:
+            try:
+                return datetime(*val[:6], tzinfo=timezone.utc)
+            except Exception:
+                pass
+    return None
+
+def parse_iso_date(s: str) -> datetime | None:
+    if not s:
+        return None
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+def age_label(published_at: str | None, now: datetime) -> str | None:
+    """Returns a human-readable age warning if article is older than DATE_WINDOW_HOURS."""
+    if not published_at:
+        return None
+    dt = parse_iso_date(published_at)
+    if not dt:
+        return None
+    hours = (now - dt).total_seconds() / 3600
+    if hours > DATE_WINDOW_HOURS:
+        days = int(hours // 24)
+        return f"Published {days} day{'s' if days != 1 else ''} ago"
+    return None
+
+# ─── Article extraction ───────────────────────────────────────────────────────
+
+def extract_article_body(html: str) -> str:
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup(["script", "style", "nav", "header", "footer", "aside", "form"]):
+        tag.decompose()
+    for selector in ["article", "main", "[class*='article']", "[class*='content']", "[class*='post']"]:
+        container = soup.select_one(selector)
+        if container:
+            paragraphs = container.find_all("p")
+            text = " ".join(p.get_text(" ", strip=True) for p in paragraphs if len(p.get_text(strip=True)) > 40)
+            if len(text) > 200:
+                return re.sub(r"\s+", " ", text).strip()[:MAX_ARTICLE_CHARS]
+    paragraphs = soup.find_all("p")
+    text = " ".join(p.get_text(" ", strip=True) for p in paragraphs if len(p.get_text(strip=True)) > 40)
+    return re.sub(r"\s+", " ", text).strip()[:MAX_ARTICLE_CHARS]
+
+def fetch_full_article(url: str) -> str:
+    try:
+        r = requests.get(url, timeout=8, headers={"User-Agent": "Mozilla/5.0 (compatible; startup-intel/1.0)"})
+        r.raise_for_status()
+        body = extract_article_body(r.text)
+        if body:
+            return body
+        print(f"[EXTRACT] Empty body after parsing: {url[:60]}")
+        return ""
+    except Exception as ex:
+        print(f"[EXTRACT] Failed ({url[:60]}): {ex}")
+        return ""
+
+# ─── Fetch sources ────────────────────────────────────────────────────────────
 
 def fetch_rss(source: dict) -> list[dict]:
     try:
         feed = feedparser.parse(source["url"])
-        return [
-            {
-                "title": e.get("title", ""),
-                "summary": e.get("summary", e.get("description", "")),
-                "url": e.get("link", ""),
-                "source": source["name"],
-            }
-            for e in feed.entries
-        ]
+        items = []
+        for e in feed.entries:
+            pub = parse_rss_date(e)
+            items.append({
+                "title":        e.get("title", ""),
+                "summary":      e.get("summary", e.get("description", "")),
+                "url":          e.get("link", ""),
+                "source":       source["name"],
+                "published_at": pub.isoformat() if pub else None,
+            })
+        print(f"[FETCH] {source['name']}: {len(items)} items")
+        return items
     except Exception as ex:
-        print(f"[WARN] {source['name']}: {ex}")
+        print(f"[FETCH] {source['name']} failed: {ex}")
         return []
 
 def fetch_hn(source: dict) -> list[dict]:
     try:
         r = requests.get(source["url"], timeout=10, headers={"User-Agent": "startup-intel/1.0"})
         r.raise_for_status()
-        return [
-            {
-                "title": h.get("title", ""),
-                "summary": h.get("story_text") or "",
-                "url": h.get("url") or f"https://news.ycombinator.com/item?id={h.get('objectID')}",
-                "source": source["name"],
-            }
-            for h in r.json().get("hits", [])
-        ]
+        items = []
+        for h in r.json().get("hits", []):
+            pub = parse_iso_date(h.get("created_at"))
+            items.append({
+                "title":        h.get("title", ""),
+                "summary":      h.get("story_text") or "",
+                "url":          h.get("url") or f"https://news.ycombinator.com/item?id={h.get('objectID')}",
+                "source":       source["name"],
+                "published_at": pub.isoformat() if pub else None,
+            })
+        print(f"[FETCH] {source['name']}: {len(items)} items")
+        return items
     except Exception as ex:
-        print(f"[WARN] {source['name']}: {ex}")
-        return []
-
-def fetch_reddit(source: dict) -> list[dict]:
-    try:
-        r = requests.get(source["url"], timeout=10, headers={"User-Agent": "startup-intel/1.0"})
-        r.raise_for_status()
-        return [
-            {
-                "title": p["data"].get("title", ""),
-                "summary": p["data"].get("selftext", ""),
-                "url": p["data"].get("url", ""),
-                "source": source["name"],
-            }
-            for p in r.json().get("data", {}).get("children", [])
-        ]
-    except Exception as ex:
-        print(f"[WARN] {source['name']}: {ex}")
+        print(f"[FETCH] {source['name']} failed: {ex}")
         return []
 
 def fetch_all_sources() -> list[dict]:
     items = []
     for src in SOURCES:
-        url = src["url"]
-        if "algolia" in url:
-            batch = fetch_hn(src)
-        elif "reddit.com" in url:
-            batch = fetch_reddit(src)
+        if "algolia" in src["url"]:
+            items.extend(fetch_hn(src))
         else:
-            batch = fetch_rss(src)
-        print(f"[INFO] {src['name']}: {len(batch)} items")
-        items.extend(batch)
+            items.extend(fetch_rss(src))
+    print(f"[FETCH] Total: {len(items)} raw items across {len(SOURCES)} sources")
     return items
 
-# ─── Filter ──────────────────────────────────────────────────────────────────
+# ─── Pre-filter ───────────────────────────────────────────────────────────────
 
 def extract_domain(url: str) -> str:
     try:
@@ -160,46 +276,244 @@ def extract_domain(url: str) -> str:
     except Exception:
         return ""
 
-def pre_filter(items: list[dict], memory: dict) -> list[dict]:
-    processed = set(memory.get("processed_urls", []))
-    blacklist = set(memory.get("blacklist_domains", []))
-    ignored_kw = [k.lower() for k in memory["preferences"]["ignored_keywords"]]
+def pre_filter(items: list[dict], memory: dict, window_hours: int) -> list[dict]:
+    processed    = set(memory.get("processed_urls", []))
+    blacklist    = set(memory.get("blacklist_domains", []))
+    ignored_kw   = [k.lower() for k in memory["preferences"].get("ignored_keywords", [])]
+    cutoff_date  = datetime.now(timezone.utc) - timedelta(hours=window_hours)
+    hard_cutoff  = datetime.now(timezone.utc) - timedelta(days=5)  # never show articles older than 5 days
 
     seen_urls = set()
-    candidates = []
+    passed = []
+    rejected_seen = rejected_date = rejected_kw = rejected_discard = rejected_ignored = 0
 
     for item in items:
         url = item["url"]
         if not url or url in processed or url in seen_urls:
+            rejected_seen += 1
             continue
         if extract_domain(url) in blacklist:
+            rejected_seen += 1
             continue
+
+        # Hard date filter: drop anything older than 5 days
+        pub_at = item.get("published_at")
+        if pub_at:
+            pub_dt = parse_iso_date(pub_at)
+            if pub_dt and pub_dt < hard_cutoff:
+                rejected_date += 1
+                continue
 
         text = f"{item['title']} {item['summary']}".lower()
 
-        if not any(kw in text for kw in STAGE_KEYWORDS):
-            continue
         if any(kw in text for kw in HARD_DISCARD):
+            rejected_discard += 1
             continue
         if any(kw in text for kw in ignored_kw):
+            rejected_ignored += 1
+            continue
+        if not any(kw in text for kw in STAGE_KEYWORDS):
+            rejected_kw += 1
             continue
 
         seen_urls.add(url)
-        candidates.append(item)
+        passed.append(item)
 
-    print(f"[INFO] Pre-filter: {len(candidates)} candidates from {len(items)} items")
-    return candidates[:MAX_CANDIDATES]
+    print(f"[FILTER] {len(passed)} passed | {rejected_date} too old | {rejected_seen} already-seen | {rejected_discard} hard-discard | {rejected_kw} no-keyword | {rejected_ignored} ignored")
+    return passed[:MAX_CANDIDATES]
 
-# ─── Amount normalizer ───────────────────────────────────────────────────────
+# ─── Groq helpers ─────────────────────────────────────────────────────────────
 
-def normalize_amount(raw: str) -> str:
+def call_groq(system: str, user: str, max_tokens: int = 500) -> str | None:
+    client = Groq(api_key=GROQ_API_KEY)
+    try:
+        resp = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user",   "content": user},
+            ],
+            temperature=0.0,
+            max_tokens=max_tokens,
+        )
+        raw = resp.choices[0].message.content.strip()
+        raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+        return raw
+    except Exception as ex:
+        print(f"[GROQ] Call failed: {ex}")
+        return None
+
+def parse_json_response(raw: str) -> list | None:
+    cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip())
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+    match = re.search(r"\[.*\]", cleaned, re.DOTALL)
+    if not match:
+        print(f"[GROQ] No JSON array in response: {cleaned[:200]}")
+        return None
+    try:
+        result = json.loads(match.group())
+        return result if isinstance(result, list) else None
+    except json.JSONDecodeError as ex:
+        print(f"[GROQ] JSON parse failed: {ex}")
+        return None
+
+# ─── Classification stage ─────────────────────────────────────────────────────
+
+def classify_candidates(candidates: list[dict]) -> list[dict]:
+    """Fast Groq call on titles only. Returns articles that are qualifying events."""
+    if DRY_RUN:
+        print("[CLASSIFY] DRY RUN — returning all candidates")
+        return candidates
+
+    lines = "\n".join(
+        f"[{i+1}] {sanitize(c['title'])} | {sanitize(c['summary'][:120])}"
+        for i, c in enumerate(candidates)
+    )
+    system = (
+        "You are a strict classifier. Return ONLY a JSON array of integer IDs "
+        "(e.g. [1,4,7]) for articles that are: "
+        "(A) a single company raising Pre-seed or Seed ($250K–$5M), OR "
+        "(B) a product/company launch announcement, OR "
+        "(C) a technically ambitious open-source or architecture announcement. "
+        "Reject: roundups, analysis, opinion, Series B+, no named company. "
+        "Return [] if none qualify. No explanation. No markdown."
+    )
+    raw = call_groq(system, f"Classify:\n\n{lines}", max_tokens=200)
     if not raw:
-        return "undisclosed"
+        print("[CLASSIFY] Groq failed — using all candidates as fallback")
+        return candidates
+
+    print(f"[CLASSIFY] Raw: {raw[:200]}")
+    try:
+        cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip())
+        match = re.search(r"\[.*?\]", cleaned, re.DOTALL)
+        ids = json.loads(match.group()) if match else []
+        selected = [candidates[i - 1] for i in ids if 1 <= i <= len(candidates)]
+        print(f"[CLASSIFY] {len(selected)}/{len(candidates)} selected: {ids}")
+        return selected if selected else []
+    except Exception as ex:
+        print(f"[CLASSIFY] Parse error: {ex} — using all candidates")
+        return candidates
+
+# ─── Enrichment ───────────────────────────────────────────────────────────────
+
+def enrich_candidates(candidates: list[dict]) -> list[dict]:
+    print(f"[ENRICH] Fetching article bodies for {len(candidates)} articles...")
+    for i, c in enumerate(candidates):
+        body = fetch_full_article(c["url"])
+        c["full_text"] = sanitize(body) if body else sanitize(c["summary"])
+        chars = len(c["full_text"])
+        print(f"[ENRICH] [{i+1}/{len(candidates)}] {c['source']} — {chars} chars")
+    return candidates
+
+# ─── Extraction ───────────────────────────────────────────────────────────────
+
+EXTRACTION_SYSTEM = """You extract structured facts from startup news articles.
+
+Each result must use EXACTLY these field names:
+{
+  "source_id": <integer>,
+  "company": "company name",
+  "amount": "$XM or null",
+  "stage": "Pre-seed/Seed/Series A/Series B/Series C or null",
+  "event_type": "raised/launched/technical",
+  "founder_name": "full name or null"
+}
+
+Rules:
+- Use the field name "company" (not "company_name").
+- "amount" must be a dollar figure explicitly mentioned (e.g. "$3M"). Null if not stated.
+- "stage" must be explicitly stated. Null if not stated.
+- "founder_name" must be explicitly named in the article. Null if not found.
+- "event_type" must be one of: raised / launched / technical
+- "source_id" is the integer ID from the article tag — return it exactly.
+
+Qualify only:
+- raised: single named company with an explicitly stated funding amount
+- launched: product or company public debut
+- technical: open-source release, notable architecture announcement
+
+Reject: roundups, industry analysis, opinion pieces, no explicit company name.
+
+Output: JSON array only. No markdown. Empty array [] if nothing qualifies."""
+
+def extract_events(candidates: list[dict], memory: dict, cfg: dict) -> list[dict] | None:
+    if DRY_RUN:
+        print("[GROQ] DRY RUN — returning mock events")
+        return [
+            {"source_id": 1, "company": "Loops", "amount": "$2.1M", "stage": "Seed",
+             "event_type": "raised", "founder_name": "Chris Frantz"},
+        ]
+
+    cutoff = (date.today() - timedelta(days=SEEN_DAYS)).isoformat()
+    skip_names = [s["company"] for s in memory.get("seen_companies", []) if s["date_seen"] >= cutoff]
+    skip_line = f"\nSkip (already reported): {', '.join(skip_names)}" if skip_names else ""
+
+    news_block = "\n\n".join(
+        f'<article id="{i+1}">\nSOURCE: {c["source"]}\nTITLE: {sanitize(c["title"])}\n'
+        f'BODY: {c.get("full_text", sanitize(c["summary"]))}\n</article>'
+        for i, c in enumerate(candidates)
+    )
+    user = f"Amount range: ${cfg['amount_min_usd']//1000}K–${cfg['amount_max_usd']//1_000_000}M{skip_line}\n\n{news_block}"
+
+    print(f"[GROQ] Sending {len(candidates)} articles for extraction...")
+    raw = call_groq(EXTRACTION_SYSTEM, user, max_tokens=800)
+    if raw is None:
+        return None
+
+    print(f"[GROQ] Raw response ({len(raw)} chars): {raw[:600]}")
+
+    events = parse_json_response(raw)
+    if events is None:
+        return None
+    if not events:
+        print("[GROQ] No qualifying events found")
+        return []
+
+    # Resolve URLs from candidates — LLM never generates URLs
+    resolved = []
+    for ev in events:
+        sid = ev.get("source_id")
+        if not isinstance(sid, int) or not (1 <= sid <= len(candidates)):
+            print(f"[VALIDATE] Invalid source_id {sid} — skipping")
+            continue
+        candidate = candidates[sid - 1]
+        ev["article_url"]   = candidate["url"]
+        ev["published_at"]  = candidate.get("published_at")
+        ev["source"]        = candidate["source"]
+        company = (ev.get("company") or ev.get("company_name") or "").strip()
+        ev["company"] = company  # normalize field name
+        if not company:
+            print(f"[VALIDATE] Missing company name — skipping")
+            continue
+        event_type = ev.get("event_type", "")
+        if event_type not in ("raised", "launched", "technical"):
+            print(f"[VALIDATE] Invalid event_type '{event_type}' for {company} — skipping")
+            continue
+        # Injection check on text fields
+        flagged = False
+        for field in ("company", "founder_name"):
+            val = ev.get(field) or ""
+            if any(re.search(p, val, re.IGNORECASE) for p in INJECTION_PATTERNS):
+                print(f"[VALIDATE] Injection in '{field}' for {company} — skipping")
+                flagged = True
+                break
+        if flagged:
+            continue
+        print(f"[VALIDATE] PASS — {company} | {ev.get('event_type')} | {ev.get('amount') or 'amount not stated'}")
+        resolved.append(ev)
+
+    print(f"[VALIDATE] {len(resolved)} valid / {len(events) - len(resolved)} rejected")
+    return resolved
+
+# ─── Amount normalizer ────────────────────────────────────────────────────────
+
+def normalize_amount(raw: str | None) -> str:
+    if not raw:
+        return ""
     s = raw.lower().strip()
-    # Already clean: $1.2M, $500K
     if re.match(r"^\$[\d.]+[mkb]$", s, re.I):
-        return raw.upper().replace("K", "K").replace("M", "M").replace("B", "B")
-    # Extract leading number + optional unit
+        return raw.upper()
     m = re.search(r"([\d,.]+)\s*(billion|million|thousand|b|m|k)?", s)
     if not m:
         return raw
@@ -208,259 +522,80 @@ def normalize_amount(raw: str) -> str:
     except ValueError:
         return raw
     unit = (m.group(2) or "").lower()
-    if unit in ("billion", "b"):
-        return f"${num:.1f}B"
-    if unit in ("million", "m"):
-        return f"${num:.1f}M"
-    if unit in ("thousand", "k"):
-        return f"${num:.0f}K"
-    # Raw number
-    if num >= 1_000_000:
-        return f"${num / 1_000_000:.1f}M"
-    if num >= 1_000:
-        return f"${num / 1_000:.0f}K"
+    if unit in ("billion", "b"):  return f"${num:.1f}B"
+    if unit in ("million", "m"):  return f"${num:.1f}M"
+    if unit in ("thousand", "k"): return f"${num:.0f}K"
+    if num >= 1_000_000: return f"${num / 1_000_000:.1f}M"
+    if num >= 1_000:     return f"${num / 1_000:.0f}K"
     return f"${num:.0f}"
 
-# ─── Groq pipeline ───────────────────────────────────────────────────────────
+# ─── Discord ──────────────────────────────────────────────────────────────────
 
-def build_pass1_prompt(candidates: list[dict], last_7_reports: list, cfg: dict = None) -> str:
-    cfg = cfg or DEFAULT_CONFIG
-    news_block = "\n\n".join(
-        f"[{i+1}] SOURCE: {c['source']}\nTITLE: {c['title']}\nSUMMARY: {c['summary'][:350]}\nURL: {c['url']}"
-        for i, c in enumerate(candidates)
-    )
-    skip_names = [r.get("company") or r.get("name", "") for r in last_7_reports]
-    skip = ", ".join(n for n in skip_names if n)
-    skip_line = f"\nREJECT these (already reported this week): {skip}" if skip else ""
-    amount_max = cfg["amount_max_usd"]
-    amount_max_str = f"${amount_max // 1_000_000}M"
-    extra_hints = f"\nExtra signal hints from config: {cfg['extra_signal_hints']}" if cfg.get("extra_signal_hints") else ""
+def build_discord_message(events: list[dict], cfg: dict, window_hours: int) -> str:
+    now = datetime.now(timezone.utc)
+    date_str = now.strftime("%B %d, %Y")
+    lines = [f"Startup Intelligence | {date_str} | last {window_hours}h", ""]
 
-    return f"""You are a lead intelligence analyst for Imaginary Space — an enterprise AI development studio that ships RAG pipelines, AI agents, and full-stack applications in 4–12 weeks.
+    for ev in events:
+        company     = ev.get("company", "Unknown")
+        amount      = normalize_amount(ev.get("amount"))
+        stage       = ev.get("stage") or ""
+        founder     = ev.get("founder_name")
+        source      = ev.get("source", "")
+        url         = ev.get("article_url", "")
+        event_type  = (ev.get("event_type") or "event").upper()
+        pub_at      = ev.get("published_at")
 
-You will receive a list of startup funding articles. Your job is to extract only the leads that match our ICP and assign them ONE accurate signal.
+        # Published date display
+        pub_display = ""
+        stale_warn  = ""
+        if pub_at:
+            pub_dt = parse_iso_date(pub_at)
+            if pub_dt:
+                pub_display = pub_dt.strftime("%b %d, %Y")
+                hours_old   = (now - pub_dt).total_seconds() / 3600
+                if hours_old > window_hours:
+                    days_old  = int(hours_old // 24)
+                    stale_warn = f"⚠️  Published {days_old} day{'s' if days_old != 1 else ''} ago"
 
-ICP: Founders who just raised Pre-seed or Seed ($250K–{amount_max_str}), are in a build phase, and likely lack the engineering bandwidth to ship AI fast.
-{extra_hints}
+        block = [f"{event_type}"]
+        block.append(f"Company:   {company}")
+        if amount:
+            block.append(f"Amount:    {amount}")
+        if stage:
+            block.append(f"Stage:     {stage}")
+        if founder:
+            block.append(f"Founder:   {founder}")
+        src_line = source
+        if pub_display:
+            src_line += f" | {pub_display}"
+        block.append(f"Source:    {src_line}")
+        block.append(f"URL:       {url}")
+        if stale_warn:
+            block.append(stale_warn)
+        block.append("")
 
-HARD REJECTION RULES — discard any lead that:
-- Raised Series A or later
-- Is a hardware, biotech, or pure fintech company with no software build need
-- Has an established engineering team already mentioned
-- Amount is not explicitly stated or is above {amount_max_str}
-- Opinion piece, product launch, or announcement without a funding event{skip_line}
-
-FOR EACH QUALIFYING LEAD OUTPUT EXACTLY THIS JSON OBJECT:
-{{
-  "company": "string",
-  "amount": "string (e.g. $3.7M — convert currencies to USD)",
-  "stage": "Pre-seed or Seed",
-  "description": "one sentence, what the product does and who it serves",
-  "signal": "one of the signals below — pick the most accurate one",
-  "url": "original article URL"
-}}
-
-SIGNAL OPTIONS — pick exactly one per lead:
-- "just funded, no product yet" — raise announced but no live product mentioned
-- "building with AI, no technical co-founder" — non-technical founder in an AI space
-- "shipping fast pressure" — language in article suggests urgency to ship or compete
-- "enterprise client waiting" — article mentions a customer or pilot already signed
-- "replacing manual process with AI" — clear automation or workflow replacement use case
-- "expanding to new market" — raise specifically for geographic or vertical expansion
-
-DO NOT use "has not found a repeatable acquisition channel" — that is not our signal.
-DO NOT invent signals outside the list above.
-OUTPUT ONLY a valid JSON array. No explanation, no markdown, no extra text.
-
-NEWS ITEMS:
-{news_block}"""
-
-
-def build_pass2_prompt(lead: dict) -> str:
-    return f"""You are writing a cold LinkedIn DM on behalf of Carlos at Imaginary Space.
-
-Imaginary Space ships production AI systems in 4–12 weeks. RAG pipelines, autonomous agents, full-stack applications. 50+ products shipped. Our ICP is a founder who just raised and needs to move fast on building.
-
-You will receive one lead object. Write ONE outreach message that:
-- Opens with a specific observation about THIS company (not a generic line)
-- References the raise naturally — not as flattery, as context
-- Connects their signal to a specific thing Imaginary Space solves
-- Ends with one low-friction question (not "what's your biggest challenge")
-- Sounds like a peer talking to a peer — no corporate language
-- Is 3 sentences maximum
-
-ALSO output a LinkedIn search URL in this exact format:
-https://www.linkedin.com/search/results/people/?keywords={{CompanyName}}+CEO+founder
-
-Replace {{CompanyName}} with the company name only. No repetition. Do NOT add "CEO founder" after the company name if it is already in the URL.
-
-OUTPUT FORMAT (plain text, no JSON):
-{lead.get('company', 'Company')} | {lead.get('amount', '')} {lead.get('stage', '')}
-https://www.linkedin.com/search/results/people/?keywords={lead.get('company', '').replace(' ', '+')}+CEO+founder
-
-> [your message here]
-> Signal: {lead.get('signal', '')}
-
-DO NOT repeat the company name twice in the URL.
-DO NOT start the message with "As a seed-stage company".
-DO NOT use the word "challenges", "hurdles", or "acquisition channel".
-
-LEAD:
-{json.dumps(lead, indent=2)}"""
-
-
-def call_groq(prompt: str, max_tokens: int = 3000) -> str | None:
-    client = Groq(api_key=GROQ_API_KEY)
-    try:
-        resp = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.1,
-            max_tokens=max_tokens,
-        )
-        return resp.choices[0].message.content.strip()
-    except Exception as ex:
-        print(f"[ERROR] Groq call failed: {ex}")
-        return None
-
-
-def parse_json_response(raw: str) -> list | None:
-    # Strip code fences
-    cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip())
-    cleaned = re.sub(r"\s*```$", "", cleaned)
-    # Extract the JSON array even if Groq adds text before/after
-    match = re.search(r"\[.*\]", cleaned, re.DOTALL)
-    if not match:
-        print(f"[ERROR] No JSON array found in response")
-        print(f"[DEBUG] Raw snippet: {cleaned[:300]}")
-        return None
-    try:
-        result = json.loads(match.group())
-        if isinstance(result, list):
-            return result
-        print(f"[ERROR] Expected list, got: {type(result)}")
-        return None
-    except json.JSONDecodeError as ex:
-        print(f"[ERROR] JSON parse failed: {ex}")
-        print(f"[DEBUG] Extracted: {match.group()[:400]}")
-        return None
-
-
-def analyze_and_review(candidates: list[dict], last_7_reports: list, cfg: dict = None) -> list[dict] | None:
-    if DRY_RUN:
-        print("[DRY RUN] Skipping Groq calls")
-        return [
-            {
-                "company": "Loops",
-                "stage": "Seed",
-                "amount": "$2.1M",
-                "description": "Email platform built for SaaS products replacing Mailchimp for product teams.",
-                "signal": "replacing manual process with AI",
-                "url": "https://techcrunch.com/example",
-                "outreach_block": "Loops | $2.1M Seed\nhttps://www.linkedin.com/search/results/people/?keywords=Loops+CEO+founder\n\n> Most seed-stage SaaS founders ship email tooling last, then realize it's the thing killing activation. You raised to go fast — is the product-to-email handoff already wired or still manual?\n> Signal: replacing manual process with AI",
-            },
-            {
-                "company": "Finta",
-                "stage": "Pre-seed",
-                "amount": "$1.8M",
-                "description": "Automates investor updates and cap table management for early-stage founders.",
-                "signal": "just funded, no product yet",
-                "url": "https://techcrunch.com/example2",
-                "outreach_block": "Finta | $1.8M Pre-seed\nhttps://www.linkedin.com/search/results/people/?keywords=Finta+CEO+founder\n\n> Cap table tooling at pre-seed usually gets built last, right after the thing that actually closes the next round. What does your current investor reporting look like?\n> Signal: just funded, no product yet",
-            },
-        ]
-
-    print(f"[INFO] Pass 1: extraction — {len(candidates)} candidates")
-    raw1 = call_groq(build_pass1_prompt(candidates, last_7_reports, cfg))
-    if raw1 is None:
-        return None
-
-    leads = parse_json_response(raw1)
-    if leads is None:
-        return None
-    if not leads:
-        print("[INFO] No qualifying leads after filtering")
-        return []
-
-    print(f"[INFO] Pass 1: {len(leads)} lead(s) — running outreach pass (per-lead)")
-
-    # Pass 2: one Groq call per lead, up to MAX_OUTREACH
-    for i, lead in enumerate(leads[:MAX_OUTREACH]):
-        raw2 = call_groq(build_pass2_prompt(lead), max_tokens=400)
-        if raw2:
-            lead["outreach_block"] = raw2.strip()
-            print(f"[INFO] Pass 2: outreach written for {lead.get('company', '?')}")
-        else:
-            print(f"[WARN] Pass 2: failed for {lead.get('company', '?')} — skipping outreach")
-
-    print(f"[INFO] Pipeline complete — {len(leads)} lead(s)")
-    return leads
-
-# ─── Discord formatter ───────────────────────────────────────────────────────
-
-def no_emdash(text: str) -> str:
-    return text.replace("—", "-").replace("–", "-")
-
-def build_discord_message(leads: list[dict], cfg: dict = None) -> str:
-    date_str = datetime.now(timezone.utc).strftime("%B %d, %Y")
-    count = len(leads)
-
-    # ── Section 1: funding summary ───────────────────────────────────────────
-    lines = [
-        f"🔥 Here is what's new friends - {date_str} | {count} round{'s' if count != 1 else ''} 🌍🚀",
-        "",
-    ]
-    for lead in leads:
-        name = no_emdash(lead.get("company", "Unknown"))
-        amount = normalize_amount(lead.get("amount", ""))
-        stage = lead.get("stage", "")
-        desc = no_emdash(lead.get("description", ""))
-        lines.append(f"📌 {name} raised {amount} {stage} - {desc}")
-
-    lines += ["", "Cold Outreach Angles", ""]
-
-    # ── Section 2: outreach blocks written by Pass 2 ─────────────────────────
-    outreach_included = 0
-    for lead in leads:
-        block_text = lead.get("outreach_block", "")
-        if not block_text:
-            continue
-        if outreach_included >= MAX_OUTREACH:
-            break
-
-        block = ["🎯 Potential Message", no_emdash(block_text), ""]
-        candidate = "\n".join(lines + block)
-        if len(candidate) > MAX_MESSAGE_CHARS:
+        if len("\n".join(lines + block)) > MAX_MESSAGE_CHARS:
+            print(f"[DISCORD] Char limit reached — dropping remaining events")
             break
         lines += block
-        outreach_included += 1
 
-    # ── Footer: active config confirmation ───────────────────────────────────
-    cfg = cfg or DEFAULT_CONFIG
-    min_str = f"${cfg['amount_min_usd'] // 1000}K" if cfg["amount_min_usd"] < 1_000_000 else f"${cfg['amount_min_usd'] // 1_000_000}M"
-    max_str = f"${cfg['amount_max_usd'] // 1_000_000}M"
-    kw = cfg.get("extra_target_keywords", [])
-    hints = " | hints on" if cfg.get("extra_signal_hints") else ""
-    kw_str = f" | +{','.join(kw)}" if kw else ""
-    lines.append(f"\n⚙️ Config: range {min_str}–{max_str}{kw_str}{hints}")
-
+    min_s = f"${cfg['amount_min_usd']//1000}K" if cfg["amount_min_usd"] < 1_000_000 else f"${cfg['amount_min_usd']//1_000_000}M"
+    max_s = f"${cfg['amount_max_usd']//1_000_000}M"
+    lines.append(f"---\n{len(events)} event(s) | {min_s}–{max_s} | {window_hours}h window")
     return "\n".join(lines).strip()
 
-# ─── Post ────────────────────────────────────────────────────────────────────
 
-def post_to_discord(leads: list[dict], cfg: dict = None) -> None:
-    if not leads:
-        print("[INFO] No leads — nothing to post")
+def post_to_discord(events: list[dict], cfg: dict, window_hours: int) -> None:
+    if not events:
+        print("[DISCORD] No events — nothing to post")
         return
 
-    message = build_discord_message(leads, cfg)
+    message = build_discord_message(events, cfg, window_hours)
+    print(f"[DISCORD] Message ({len(message)} chars):\n{'-'*60}\n{message}\n{'-'*60}")
 
     if DRY_RUN:
-        print("[DRY RUN] Discord message preview:")
-        print("-" * 60)
-        print(message)
-        print("-" * 60)
-        print(f"[DRY RUN] Length: {len(message)} chars")
+        print("[DISCORD] DRY RUN — skipping post")
         return
 
     resp = requests.post(
@@ -469,19 +604,21 @@ def post_to_discord(leads: list[dict], cfg: dict = None) -> None:
         timeout=10,
     )
     if resp.status_code in (200, 204):
-        print(f"[INFO] Posted {len(leads)} lead(s) to Discord ({len(message)} chars)")
+        print(f"[DISCORD] Posted {len(events)} event(s) ✓")
     else:
-        print(f"[ERROR] Discord {resp.status_code}: {resp.text}")
+        print(f"[DISCORD] Error {resp.status_code}: {resp.text}")
 
-# ─── Main ────────────────────────────────────────────────────────────────────
+# ─── Main ─────────────────────────────────────────────────────────────────────
 
 def run():
-    print(f"[INFO] Agent start | dry_run={DRY_RUN} | {datetime.now(timezone.utc).isoformat()}")
+    print(f"\n{'='*60}")
+    print(f"[START] Imaginary Space Intel | dry_run={DRY_RUN} | {datetime.now(timezone.utc).isoformat()}")
+    print(f"{'='*60}\n")
 
-    cfg = load_config()
+    cfg    = load_config()
     memory = load_memory()
+    window = int(cfg.get("window_hours", DATE_WINDOW_HOURS))
 
-    # Merge extra keywords from config into the filter
     if cfg.get("extra_target_keywords"):
         for kw in cfg["extra_target_keywords"]:
             if kw.lower() not in STAGE_KEYWORDS:
@@ -491,35 +628,67 @@ def run():
             memory["preferences"].get("ignored_keywords", []) + cfg["extra_ignored_keywords"]
         ))
 
+    # Stage 1: Fetch
     raw_items = fetch_all_sources()
-    print(f"[INFO] Total fetched: {len(raw_items)}")
 
-    candidates = pre_filter(raw_items, memory)
+    # Stage 2: Pre-filter (keyword match + hard date cut)
+    candidates = pre_filter(raw_items, memory, window)
     if not candidates:
-        print("[INFO] No candidates after filter. Done.")
+        print("[FILTER] No candidates passed. Done.")
         memory["last_run"] = datetime.now(timezone.utc).isoformat()
         save_memory(memory)
         return
 
-    leads = analyze_and_review(candidates, memory.get("last_7_reports", []), cfg)
-    if leads is None:
-        print("[ERROR] Groq failed — memory not updated so articles can be retried tomorrow.")
+    # Stage 3: Classify (fast Groq call on titles only)
+    classified = classify_candidates(candidates)
+    if not classified:
+        print("[CLASSIFY] No articles classified. Done.")
+        memory["last_run"] = datetime.now(timezone.utc).isoformat()
+        save_memory(memory)
         return
 
-    print(f"[INFO] Final leads: {len(leads)}")
-    post_to_discord(leads, cfg)
+    # Stage 4: Enrich (fetch full article body)
+    enriched = enrich_candidates(classified)
+
+    # Stage 5: Extract events
+    events = extract_events(enriched, memory, cfg)
+    if events is None:
+        print("[GROQ] Extraction failed — will retry tomorrow.")
+        return
+    if not events:
+        print("[GROQ] No qualifying events. Done.")
+        memory["last_run"] = datetime.now(timezone.utc).isoformat()
+        save_memory(memory)
+        return
+
+    # Stage 6: Deduplicate
+    new_events = [e for e in events if not is_company_seen(e.get("company", ""), memory)]
+    skipped    = len(events) - len(new_events)
+    if skipped:
+        print(f"[DEDUP] Skipped {skipped} company/ies seen in last {SEEN_DAYS} days")
+    if not new_events:
+        print("[DEDUP] All events already seen. Done.")
+        memory["last_run"] = datetime.now(timezone.utc).isoformat()
+        save_memory(memory)
+        return
+
+    # Stage 7: Post
+    print(f"\n[FINAL] {len(new_events)} new event(s) ready to post")
+    post_to_discord(new_events, cfg, window)
 
     if DRY_RUN:
-        print("[DRY RUN] Skipping memory save.")
+        print("[MEMORY] DRY RUN — skipping memory save")
         return
 
-    # Update memory only after successful live run
-    new_urls = [c["url"] for c in candidates]
-    memory["processed_urls"] = list(set(memory.get("processed_urls", []) + new_urls))
-    memory["last_7_reports"] = (memory.get("last_7_reports", []) + leads)[-7:]
+    # Stage 8: Save memory
+    memory["processed_urls"] = list(set(
+        memory.get("processed_urls", []) + [c["url"] for c in candidates]
+    ))
+    for ev in new_events:
+        mark_company_seen(ev.get("company", ""), memory)
     memory["last_run"] = datetime.now(timezone.utc).isoformat()
     save_memory(memory)
-    print("[INFO] Memory saved. Done.")
+    print("[MEMORY] Saved ✓")
 
 
 if __name__ == "__main__":
