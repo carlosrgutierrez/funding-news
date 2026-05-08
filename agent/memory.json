@@ -1,10 +1,70 @@
 {
-  "processed_urls": [],
+  "processed_urls": [
+    "https://techcrunch.com/2026/05/07/kodiak-ai-raises-100m-at-a-steep-discount-sending-its-stock-tumbling-37/",
+    "https://techcrunch.com/2026/05/06/deepseek-could-hit-45b-valuation-from-its-first-investment-round/",
+    "https://www.eu-startups.com/2026/05/stockholms-pit-exits-stealth-with-e13-6-million-a16z-led-funding-to-offer-ai-product-teams-as-a-service/",
+    "https://techcrunch.com/2026/05/06/a-20-minute-pitch-wins-indian-startup-pronto-backing-from-lachy-groom/",
+    "https://news.crunchbase.com/startups/ai-is-rewriting-what-investors-should-look-for-in-early-startup-teams/",
+    "https://techcrunch.com/2026/05/05/altara-secures-7m-to-bridge-the-data-gap-thats-slowing-down-physical-sciences/",
+    "https://techcrunch.com/2026/05/07/indias-first-space-tech-unicorn-emerges-as-skyroot-gears-up-for-orbital-launch/",
+    "https://techcrunch.com/2026/05/06/khosla-backed-robotics-startup-genesis-ai-has-gone-full-stack-demo-shows/",
+    "https://www.eu-startups.com/2026/05/uk-semiconductor-startup-quinas-technology-secures-investment-approval-from-malta-government-venture-capital/",
+    "https://techcrunch.com/2026/05/07/voi-founders-new-ai-startup-pit-has-become-the-latest-rising-star-out-of-stockholm/",
+    "https://www.eu-startups.com/2026/05/delft-based-frostbyte-secures-a-cool-e1-3-million-to-scale-cryogenic-electronics-for-quantum-computing/",
+    "https://techcrunch.com/2026/05/07/ramp-in-talks-to-hit-40b-valuation-6-months-after-reaching-32b/",
+    "https://techcrunch.com/2026/05/06/insurance-startup-corgi-hits-1-3b-valuation-4-months-after-its-series-a/",
+    "https://www.eu-startups.com/2026/05/london-based-codewords-raises-e7-6-million-to-help-businesses-run-on-ai-autopilot/",
+    "https://techcrunch.com/2026/05/07/bumble-is-getting-rid-of-the-swipe-ceo-says/",
+    "https://techcrunch.com/2026/05/07/jeff-bezos-rep-leaves-slate-autos-board/",
+    "https://news.crunchbase.com/fintech/fazeshift-accounts-receivable-ai-finance-ops-startup-funding/",
+    "https://techcrunch.com/2026/05/07/openai-launches-new-voice-intelligence-features-in-its-api/",
+    "https://techcrunch.com/2026/05/07/googles-9-99-per-month-ai-health-coach-launches-may-19/",
+    "https://news.crunchbase.com/fintech/amex-ventures-portfolio-strategy-agentic-ai-startups-kevin-tsang/",
+    "https://techcrunch.com/2026/05/05/4-days-left-get-50-off-a-second-techcrunch-disrupt-2026-pass-to-make-more-deals-faster/",
+    "https://news.crunchbase.com/ai/blitzy-funding-valuation-autonomous-software-development-vibe-coding-startups/",
+    "https://news.crunchbase.com/venture/global-startup-funding-april-2026-anthropic-jeff-bezos-project-prometheus-biggest-deals/",
+    "https://techcrunch.com/2026/05/07/chinas-moonshot-ai-raises-2b-at-20b-valuation-as-demand-for-open-source-ai-skyrockets/",
+    "https://techcrunch.com/2026/05/05/elevenlabs-lists-blackrock-jamie-foxx-and-eva-longoria-as-new-investors/"
+  ],
   "blacklist_domains": [],
-  "seen_companies": [],
+  "seen_companies": [
+    {
+      "company": "Pit",
+      "date_seen": "2026-05-08"
+    },
+    {
+      "company": "Pronto",
+      "date_seen": "2026-05-08"
+    },
+    {
+      "company": "Altara",
+      "date_seen": "2026-05-08"
+    },
+    {
+      "company": "Fazeshift",
+      "date_seen": "2026-05-08"
+    },
+    {
+      "company": "FrostByte",
+      "date_seen": "2026-05-08"
+    },
+    {
+      "company": "CodeWords",
+      "date_seen": "2026-05-08"
+    },
+    {
+      "company": "Pit",
+      "date_seen": "2026-05-08"
+    }
+  ],
   "preferences": {
     "target_keywords": [],
-    "ignored_keywords": ["crypto", "blockchain", "nft", "pharmaceutical"]
+    "ignored_keywords": [
+      "crypto",
+      "blockchain",
+      "nft",
+      "pharmaceutical"
+    ]
   },
-  "last_run": null
+  "last_run": "2026-05-08T08:19:25.209819+00:00"
 }
