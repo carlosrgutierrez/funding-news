@@ -1,8 +1,8 @@
 """
-Startup Intelligence Agent for Imaginary Space.
+ Intelligence Agent for Imaginary Space.
 Pipeline: fetch -> pre-filter -> classify -> enrich -> extract -> post -> memory.
 
-Output: verified funding events from the last 48h. No inference. No generated URLs.
+Output: verified funding events from the last 24h. No inference. No generated URLs.
 """
 
 import json
@@ -50,15 +50,15 @@ INJECTION_PATTERNS = [
 # ─── Sources ──────────────────────────────────────────────────────────────────
 
 SOURCES = [
-    {"name": "TechCrunch Startups", "url": "https://techcrunch.com/category/startups/feed/"},
+    {"name": "TechCrunch s", "url": "https://techcrunch.com/category/s/feed/"},
     {"name": "TechCrunch Funding",  "url": "https://techcrunch.com/tag/funding/feed/"},
     {"name": "TechCrunch",          "url": "https://techcrunch.com/feed/"},
     {"name": "Crunchbase News",     "url": "https://news.crunchbase.com/feed/"},
     {"name": "VentureBeat",         "url": "https://venturebeat.com/feed/"},
-    {"name": "EU Startups",         "url": "https://www.eu-startups.com/feed/"},
+    {"name": "EU s",         "url": "https://www.eu-s.com/feed/"},
     {"name": "Sifted",              "url": "https://sifted.eu/feed"},
-    {"name": "HN Seed Funding",     "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=seed+funding+startup&hitsPerPage=25"},
-    {"name": "HN Pre-seed",         "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=pre-seed+raise+startup&hitsPerPage=20"},
+    {"name": "HN Seed Funding",     "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=seed+funding+&hitsPerPage=25"},
+    {"name": "HN Pre-seed",         "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=pre-seed+raise+&hitsPerPage=20"},
     {"name": "HN Raises",           "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=raises+seed+capital+2026&hitsPerPage=20"},
 ]
 
@@ -206,7 +206,7 @@ def extract_article_body(html: str) -> str:
 
 def fetch_full_article(url: str) -> str:
     try:
-        r = requests.get(url, timeout=8, headers={"User-Agent": "Mozilla/5.0 (compatible; startup-intel/1.0)"})
+        r = requests.get(url, timeout=8, headers={"User-Agent": "Mozilla/5.0 (compatible; -intel/1.0)"})
         r.raise_for_status()
         body = extract_article_body(r.text)
         if body:
@@ -240,7 +240,7 @@ def fetch_rss(source: dict) -> list[dict]:
 
 def fetch_hn(source: dict) -> list[dict]:
     try:
-        r = requests.get(source["url"], timeout=10, headers={"User-Agent": "startup-intel/1.0"})
+        r = requests.get(source["url"], timeout=10, headers={"User-Agent": "-intel/1.0"})
         r.raise_for_status()
         items = []
         for h in r.json().get("hits", []):
@@ -408,7 +408,7 @@ def enrich_candidates(candidates: list[dict]) -> list[dict]:
 
 # ─── Extraction ───────────────────────────────────────────────────────────────
 
-EXTRACTION_SYSTEM = """You extract structured facts from startup news articles.
+EXTRACTION_SYSTEM = """You extract structured facts from  news articles.
 
 Each result must use EXACTLY these field names:
 {
@@ -600,7 +600,7 @@ def post_to_discord(events: list[dict], cfg: dict, window_hours: int) -> None:
 
     resp = requests.post(
         DISCORD_WEBHOOK_URL,
-        json={"username": "Startup Intel", "content": message},
+        json={"username": "Founding Radar", "content": message},
         timeout=10,
     )
     if resp.status_code in (200, 204):
