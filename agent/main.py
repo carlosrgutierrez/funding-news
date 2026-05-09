@@ -32,7 +32,7 @@ MAX_CANDIDATES      = 25
 MAX_ARTICLE_CHARS   = 1500
 MAX_MESSAGE_CHARS   = 1900
 SEEN_DAYS           = 7
-DATE_WINDOW_HOURS   = 24  # articles older than this are flagged stale; hard-filtered if > 5 days
+DATE_WINDOW_HOURS   = 24
 
 INJECTION_PATTERNS = [
     r"ignore\s+(all\s+)?(previous|prior|above)\s+instructions",
@@ -50,16 +50,22 @@ INJECTION_PATTERNS = [
 # ─── Sources ──────────────────────────────────────────────────────────────────
 
 SOURCES = [
-    {"name": "TechCrunch s", "url": "https://techcrunch.com/category/s/feed/"},
+    {"name": "TechCrunch Startups", "url": "https://techcrunch.com/category/startups/feed/"},
     {"name": "TechCrunch Funding",  "url": "https://techcrunch.com/tag/funding/feed/"},
     {"name": "TechCrunch",          "url": "https://techcrunch.com/feed/"},
     {"name": "Crunchbase News",     "url": "https://news.crunchbase.com/feed/"},
     {"name": "VentureBeat",         "url": "https://venturebeat.com/feed/"},
-    {"name": "EU s",         "url": "https://www.eu-s.com/feed/"},
+    {"name": "EU-Startups",         "url": "https://www.eu-startups.com/feed/"},
+    {"name": "FinSMEs",             "url": "https://www.finsmes.com/feed"},
+    {"name": "Silicon Canals",      "url": "https://siliconcanals.com/feed/"},
+    {"name": "UKTN",                "url": "https://www.uktech.news/feed"},
     {"name": "Sifted",              "url": "https://sifted.eu/feed"},
     {"name": "HN Seed Funding",     "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=seed+funding+&hitsPerPage=25"},
     {"name": "HN Pre-seed",         "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=pre-seed+raise+&hitsPerPage=20"},
     {"name": "HN Raises",           "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=raises+seed+capital+2026&hitsPerPage=20"},
+    {"name": "HN Raised",           "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=raised+%24+startup&hitsPerPage=20"},
+    {"name": "HN Angel Round",      "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=angel+round+startup&hitsPerPage=20"},
+    {"name": "HN Stealth",          "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=emerges+from+stealth+funding&hitsPerPage=20"},
 ]
 
 STAGE_KEYWORDS = [
@@ -83,12 +89,30 @@ HARD_DISCARD = [
     "pharmaceutical",
 ]
 
+BIG_COMPANY_NOISE = [
+    "nvidia", "intel", "cloudflare", "openai", "anthropic",
+    "oracle", "porsche", "prime video", "uber", "fortune 50",
+]
+
+WATCHLIST_KEYWORDS = [
+    "startup", "founder", "yc", "y combinator", "accelerator",
+    "emerges from stealth", "stealth", "launch", "launches", "launched",
+    "beta", "developer tooling", "devtools", "open source",
+    "backed by", "seed", "pre-seed", "angel",
+]
+
+WATCHLIST_TITLE_NOISE = [
+    "people who", "research suggests", "phone face-down", "conversation",
+    "workforce today", "learned early", "aren't being polite",
+    "are not being polite",
+]
+
 # ─── Config ───────────────────────────────────────────────────────────────────
 
 DEFAULT_CONFIG = {
     "icp": "Early-stage founders who just raised and need to ship an MVP fast.",
-    "amount_min_usd": 250000,
-    "amount_max_usd": 5000000,
+    "amount_min_usd": 100000,
+    "amount_max_usd": 20000000,
     "extra_target_keywords": [],
     "extra_ignored_keywords": [],
     "window_hours": DATE_WINDOW_HOURS,
@@ -141,6 +165,11 @@ def mark_company_seen(company: str, memory: dict) -> None:
     memory["seen_companies"].append({"company": company, "date_seen": date.today().isoformat()})
     cutoff = (date.today() - timedelta(days=SEEN_DAYS)).isoformat()
     memory["seen_companies"] = [s for s in memory["seen_companies"] if s["date_seen"] >= cutoff]
+
+def mark_processed_event_urls(events: list[dict], memory: dict) -> None:
+    existing = set(memory.get("processed_urls", []))
+    posted = {e.get("article_url") for e in events if e.get("article_url")}
+    memory["processed_urls"] = sorted(existing | posted)
 
 # ─── Injection guard ──────────────────────────────────────────────────────────
 
@@ -281,7 +310,6 @@ def pre_filter(items: list[dict], memory: dict, window_hours: int) -> list[dict]
     blacklist    = set(memory.get("blacklist_domains", []))
     ignored_kw   = [k.lower() for k in memory["preferences"].get("ignored_keywords", [])]
     cutoff_date  = datetime.now(timezone.utc) - timedelta(hours=window_hours)
-    hard_cutoff  = datetime.now(timezone.utc) - timedelta(days=5)  # never show articles older than 5 days
 
     seen_urls = set()
     passed = []
@@ -296,13 +324,14 @@ def pre_filter(items: list[dict], memory: dict, window_hours: int) -> list[dict]
             rejected_seen += 1
             continue
 
-        # Hard date filter: drop anything older than 5 days
         pub_at = item.get("published_at")
-        if pub_at:
-            pub_dt = parse_iso_date(pub_at)
-            if pub_dt and pub_dt < hard_cutoff:
-                rejected_date += 1
-                continue
+        if not pub_at:
+            rejected_date += 1
+            continue
+        pub_dt = parse_iso_date(pub_at)
+        if not pub_dt or pub_dt < cutoff_date:
+            rejected_date += 1
+            continue
 
         text = f"{item['title']} {item['summary']}".lower()
 
@@ -359,7 +388,13 @@ def parse_json_response(raw: str) -> list | None:
 
 # ─── Classification stage ─────────────────────────────────────────────────────
 
-def classify_candidates(candidates: list[dict]) -> list[dict]:
+def format_money(value: int) -> str:
+    if value >= 1_000_000:
+        amount = value / 1_000_000
+        return f"${amount:g}M"
+    return f"${value // 1000}K"
+
+def classify_candidates(candidates: list[dict], cfg: dict) -> list[dict]:
     """Fast Groq call on titles only. Returns articles that are qualifying events."""
     if DRY_RUN:
         print("[CLASSIFY] DRY RUN — returning all candidates")
@@ -369,13 +404,14 @@ def classify_candidates(candidates: list[dict]) -> list[dict]:
         f"[{i+1}] {sanitize(c['title'])} | {sanitize(c['summary'][:120])}"
         for i, c in enumerate(candidates)
     )
+    amount_range = f"{format_money(cfg['amount_min_usd'])}-{format_money(cfg['amount_max_usd'])}"
     system = (
         "You are a strict classifier. Return ONLY a JSON array of integer IDs "
         "(e.g. [1,4,7]) for articles that are: "
-        "(A) a single company raising Pre-seed or Seed ($250K–$5M), OR "
+        f"(A) a single company raising Pre-seed, Seed, Angel, or Series A ({amount_range}), OR "
         "(B) a product/company launch announcement, OR "
-        "(C) a technically ambitious open-source or architecture announcement. "
-        "Reject: roundups, analysis, opinion, Series B+, no named company. "
+        "(C) a company emerging from stealth, backed by named investors, or announcing a technical open-source release. "
+        "Reject: roundups, analysis, opinion, Series B+, public-company-only news, no named company. "
         "Return [] if none qualify. No explanation. No markdown."
     )
     raw = call_groq(system, f"Classify:\n\n{lines}", max_tokens=200)
@@ -531,6 +567,63 @@ def normalize_amount(raw: str | None) -> str:
 
 # ─── Discord ──────────────────────────────────────────────────────────────────
 
+def select_watchlist_items(candidates: list[dict], limit: int = 3) -> list[dict]:
+    scored = []
+    for item in candidates:
+        title = item.get("title", "")
+        title_text = title.lower()
+        text = f"{title} {item.get('summary', '')}".lower()
+        if len(title) > 180 or any(noise in title_text for noise in WATCHLIST_TITLE_NOISE):
+            continue
+        if any(noise in text for noise in BIG_COMPANY_NOISE):
+            continue
+        if not any(keyword in title_text for keyword in WATCHLIST_KEYWORDS):
+            continue
+
+        score = 0
+        if re.search(r"\$[\d,.]+|\b\d+(?:\.\d+)?\s*(?:m|million)\b", text):
+            score += 30
+        if any(stage in text for stage in ("pre-seed", "pre seed", "seed", "angel", "series a")):
+            score += 25
+        if any(signal in text for signal in ("launch", "launched", "launches", "emerges from stealth", "backed by")):
+            score += 15
+        if any(domain in text for domain in ("ai", "developer", "devtools", "software", "saas", "agent")):
+            score += 10
+        scored.append((score, item))
+
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    return [item for _, item in scored[:limit]]
+
+def build_fallback_digest_message(
+    cfg: dict,
+    window_hours: int,
+    candidates: list[dict],
+    now: datetime | None = None,
+) -> str:
+    current = now or datetime.now(timezone.utc)
+    date_str = current.strftime("%B %d, %Y")
+    min_s = format_money(cfg["amount_min_usd"])
+    max_s = format_money(cfg["amount_max_usd"])
+    lines = [
+        f"Founding Radar | {date_str} | last {window_hours}h",
+        "",
+        "No major pre-seed, seed, angel, or Series A funding events found.",
+        f"Range checked: {min_s}-{max_s}",
+    ]
+
+    watchlist = select_watchlist_items(candidates)
+    if watchlist:
+        lines.extend(["", "Watchlist:"])
+        for item in watchlist:
+            source = item.get("source", "Unknown source")
+            title = item.get("title", "Untitled")
+            url = item.get("url", "")
+            lines.append(f"- {title} | {source} | <{url}>")
+    else:
+        lines.extend(["", "Watchlist: no startup momentum signals strong enough to send today."])
+
+    return "\n".join(lines).strip()
+
 def build_discord_message(events: list[dict], cfg: dict, window_hours: int) -> str:
     now = datetime.now(timezone.utc)
     date_str = now.strftime("%B %d, %Y")
@@ -586,12 +679,7 @@ def build_discord_message(events: list[dict], cfg: dict, window_hours: int) -> s
     return "\n".join(lines).strip()
 
 
-def post_to_discord(events: list[dict], cfg: dict, window_hours: int) -> None:
-    if not events:
-        print("[DISCORD] No events — nothing to post")
-        return
-
-    message = build_discord_message(events, cfg, window_hours)
+def send_discord_message(message: str) -> None:
     print(f"[DISCORD] Message ({len(message)} chars):\n{'-'*60}\n{message}\n{'-'*60}")
 
     if DRY_RUN:
@@ -604,9 +692,19 @@ def post_to_discord(events: list[dict], cfg: dict, window_hours: int) -> None:
         timeout=10,
     )
     if resp.status_code in (200, 204):
-        print(f"[DISCORD] Posted {len(events)} event(s) ✓")
+        print("[DISCORD] Posted message")
     else:
         print(f"[DISCORD] Error {resp.status_code}: {resp.text}")
+
+def post_to_discord(events: list[dict], cfg: dict, window_hours: int) -> None:
+    if not events:
+        print("[DISCORD] No events — nothing to post")
+        return
+
+    send_discord_message(build_discord_message(events, cfg, window_hours))
+
+def post_fallback_digest(cfg: dict, window_hours: int, candidates: list[dict]) -> None:
+    send_discord_message(build_fallback_digest_message(cfg, window_hours, candidates))
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
@@ -634,15 +732,17 @@ def run():
     # Stage 2: Pre-filter (keyword match + hard date cut)
     candidates = pre_filter(raw_items, memory, window)
     if not candidates:
-        print("[FILTER] No candidates passed. Done.")
+        print("[FILTER] No candidates passed. Posting fallback digest.")
+        post_fallback_digest(cfg, window, [])
         memory["last_run"] = datetime.now(timezone.utc).isoformat()
         save_memory(memory)
         return
 
     # Stage 3: Classify (fast Groq call on titles only)
-    classified = classify_candidates(candidates)
+    classified = classify_candidates(candidates, cfg)
     if not classified:
-        print("[CLASSIFY] No articles classified. Done.")
+        print("[CLASSIFY] No articles classified. Posting fallback digest.")
+        post_fallback_digest(cfg, window, candidates)
         memory["last_run"] = datetime.now(timezone.utc).isoformat()
         save_memory(memory)
         return
@@ -656,7 +756,8 @@ def run():
         print("[GROQ] Extraction failed — will retry tomorrow.")
         return
     if not events:
-        print("[GROQ] No qualifying events. Done.")
+        print("[GROQ] No qualifying events. Posting fallback digest.")
+        post_fallback_digest(cfg, window, candidates)
         memory["last_run"] = datetime.now(timezone.utc).isoformat()
         save_memory(memory)
         return
@@ -667,7 +768,8 @@ def run():
     if skipped:
         print(f"[DEDUP] Skipped {skipped} company/ies seen in last {SEEN_DAYS} days")
     if not new_events:
-        print("[DEDUP] All events already seen. Done.")
+        print("[DEDUP] All events already seen. Posting fallback digest.")
+        post_fallback_digest(cfg, window, candidates)
         memory["last_run"] = datetime.now(timezone.utc).isoformat()
         save_memory(memory)
         return
@@ -681,9 +783,7 @@ def run():
         return
 
     # Stage 8: Save memory
-    memory["processed_urls"] = list(set(
-        memory.get("processed_urls", []) + [c["url"] for c in candidates]
-    ))
+    mark_processed_event_urls(new_events, memory)
     for ev in new_events:
         mark_company_seen(ev.get("company", ""), memory)
     memory["last_run"] = datetime.now(timezone.utc).isoformat()
