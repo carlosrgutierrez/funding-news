@@ -32,7 +32,7 @@ MAX_CANDIDATES      = 25
 MAX_ARTICLE_CHARS   = 1500
 MAX_MESSAGE_CHARS   = 1900
 SEEN_DAYS           = 7
-DATE_WINDOW_HOURS   = 48  # articles older than this are flagged stale; hard-filtered if > 5 days
+DATE_WINDOW_HOURS   = 24  # articles older than this are flagged stale; hard-filtered if > 5 days
 
 INJECTION_PATTERNS = [
     r"ignore\s+(all\s+)?(previous|prior|above)\s+instructions",
@@ -570,7 +570,7 @@ def build_discord_message(events: list[dict], cfg: dict, window_hours: int) -> s
         if pub_display:
             src_line += f" | {pub_display}"
         block.append(f"Source:    {src_line}")
-        block.append(f"URL:       {url}")
+        block.append(f"URL:       <{url}>")
         if stale_warn:
             block.append(stale_warn)
         block.append("")
