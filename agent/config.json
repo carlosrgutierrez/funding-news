@@ -2,7 +2,7 @@
   "icp": "Early-stage founders (Pre-seed to Seed) who just raised and need to ship an MVP or v1 product fast. They have money but no engineering team or too slow a team. They are technical enough to know what they want but need execution speed.",
   "amount_min_usd": 250000,
   "amount_max_usd": 20000000,
-  "window_hours": 48,
+  "window_hours": 24,
   "extra_target_keywords": [],
   "extra_ignored_keywords": [],
   "extra_signal_hints": "",
