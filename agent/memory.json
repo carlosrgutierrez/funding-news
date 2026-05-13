@@ -2,9 +2,12 @@
   "processed_urls": [
     "https://sifted.eu/articles/algorithmiq-fundraise-relocation-italy/",
     "https://siliconcanals.com/sc-a-contaminated-food-batches-reach-consumers-because-lab-results-take-days-a-german-sensor-startup-just-convinced-htgf-and-bayern-kapital-that-hours-is-the-new-compliance-baseline/",
+    "https://www.eu-startups.com/2026/05/ai-for-the-workers-it-cant-replace-italys-gyver-raises-e1-4-million-to-empower-electricians/",
     "https://www.eu-startups.com/2026/05/belgiums-holmes-launches-with-e1-1-million-pre-seed-to-catch-software-bugs-before-they-reach-users/",
     "https://www.eu-startups.com/2026/05/bolognas-cellply-secures-e7-15-million-to-develop-tools-for-faster-immunotherapy-and-cell-therapy-development/",
+    "https://www.eu-startups.com/2026/05/bucharest-based-designverse-raises-over-e4-6-million-seed-funding-after-supporting-eurocontrol-software-upgrade/",
     "https://www.eu-startups.com/2026/05/index-ventures-backed-adfin-raises-e15-3-million-to-help-businesses-automate-revenue-collection-with-ai/",
+    "https://www.eu-startups.com/2026/05/italian-ai-company-webidoo-secures-e21-million-to-scale-smb-focused-automation-platform/",
     "https://www.eu-startups.com/2026/05/londons-dessn-raises-e5-million-to-help-product-teams-design-and-prototype-inside-real-codebases/",
     "https://www.eu-startups.com/2026/05/londons-fifth-dimension-raises-e22-million-to-scale-ai-powered-decision-intelligence-for-real-assets/",
     "https://www.eu-startups.com/2026/05/rotterdams-ditto-raises-e7-6-million-to-make-what-did-the-doctor-say-easier-to-answer/",
@@ -89,6 +92,18 @@
     {
       "company": "Esk",
       "date_seen": "2026-05-12"
+    },
+    {
+      "company": "Gyver",
+      "date_seen": "2026-05-13"
+    },
+    {
+      "company": "DesignVerse",
+      "date_seen": "2026-05-13"
+    },
+    {
+      "company": "Webidoo",
+      "date_seen": "2026-05-13"
     }
   ],
   "preferences": {
@@ -100,5 +115,5 @@
       "pharmaceutical"
     ]
   },
-  "last_run": "2026-05-12T08:40:48.779220+00:00"
+  "last_run": "2026-05-13T08:45:02.127957+00:00"
 }
