@@ -9,6 +9,7 @@
     "https://www.eu-startups.com/2026/05/ai-for-the-workers-it-cant-replace-italys-gyver-raises-e1-4-million-to-empower-electricians/",
     "https://www.eu-startups.com/2026/05/barcelonas-dolfin-raises-e2-1-million-seed-round-to-scale-its-ai-native-platform-for-sales-compensation/",
     "https://www.eu-startups.com/2026/05/belgiums-holmes-launches-with-e1-1-million-pre-seed-to-catch-software-bugs-before-they-reach-users/",
+    "https://www.eu-startups.com/2026/05/berlin-based-elephant-company-raises-over-e5-million-to-bring-ai-powered-training-to-frontline-workers/",
     "https://www.eu-startups.com/2026/05/bolognas-cellply-secures-e7-15-million-to-develop-tools-for-faster-immunotherapy-and-cell-therapy-development/",
     "https://www.eu-startups.com/2026/05/bucharest-based-designverse-raises-over-e4-6-million-seed-funding-after-supporting-eurocontrol-software-upgrade/",
     "https://www.eu-startups.com/2026/05/frances-mantle8-raises-e31-million-to-fund-the-worlds-most-advanced-natural-hydrogen-exploration-and-drilling-campaign/",
@@ -22,41 +23,15 @@
     "https://www.eu-startups.com/2026/05/slovenias-ddd-invoices-secures-e1-31-million-to-tackle-fragmented-global-e-invoicing-compliance/",
     "https://www.eu-startups.com/2026/05/swedish-energytech-startup-elvy-closes-e5-9-million-round-after-securing-e500-million-credit-facility/",
     "https://www.eu-startups.com/2026/05/uk-agribiotech-startup-resurrect-bio-closes-e8-8-million-series-a-to-develop-disease-resistant-crops/",
+    "https://www.eu-startups.com/2026/05/uk-edtech-multiverse-lands-e60-million-funding-round-at-e1-8-billion-valuation/",
     "https://www.eu-startups.com/2026/05/valencia-based-fresh-people-raises-e2-6-million-to-scale-booster-its-ai-leadership-copilot/",
     "https://www.eu-startups.com/2026/05/wurzburg-based-nanostruct-raises-e2-6-million-to-detect-harmful-bacteria-in-food-within-hours/",
     "https://www.uktech.news/ai/kaizan-raises-2-5m-to-boost-its-ai-client-management-platform-20260511",
+    "https://www.uktech.news/education/edtech-unicorn-multiverse-raises-50m-20260515",
     "https://www.uktech.news/funding/esk-secures-2-6m-to-accelerate-its-live-entertainment-business-20260511"
   ],
   "blacklist_domains": [],
   "seen_companies": [
-    {
-      "company": "Pit",
-      "date_seen": "2026-05-08"
-    },
-    {
-      "company": "Pronto",
-      "date_seen": "2026-05-08"
-    },
-    {
-      "company": "Altara",
-      "date_seen": "2026-05-08"
-    },
-    {
-      "company": "Fazeshift",
-      "date_seen": "2026-05-08"
-    },
-    {
-      "company": "FrostByte",
-      "date_seen": "2026-05-08"
-    },
-    {
-      "company": "CodeWords",
-      "date_seen": "2026-05-08"
-    },
-    {
-      "company": "Pit",
-      "date_seen": "2026-05-08"
-    },
     {
       "company": "Moritz",
       "date_seen": "2026-05-09"
@@ -164,6 +139,18 @@
     {
       "company": "Zerops",
       "date_seen": "2026-05-15"
+    },
+    {
+      "company": "Elephant Company",
+      "date_seen": "2026-05-16"
+    },
+    {
+      "company": "Multiverse",
+      "date_seen": "2026-05-16"
+    },
+    {
+      "company": "Multiverse",
+      "date_seen": "2026-05-16"
     }
   ],
   "preferences": {
@@ -175,5 +162,5 @@
       "pharmaceutical"
     ]
   },
-  "last_run": "2026-05-15T08:49:35.073793+00:00"
+  "last_run": "2026-05-16T08:05:01.396197+00:00"
 }
