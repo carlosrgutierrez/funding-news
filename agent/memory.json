@@ -6,6 +6,7 @@
     "https://siliconcanals.com/sc-a-contaminated-food-batches-reach-consumers-because-lab-results-take-days-a-german-sensor-startup-just-convinced-htgf-and-bayern-kapital-that-hours-is-the-new-compliance-baseline/",
     "https://techcrunch.com/2026/05/14/khosla-ventures-is-betting-10m-on-ian-crosby-whose-last-startup-bench-imploded/",
     "https://techcrunch.com/2026/05/14/lovable-just-backed-a-company-thats-looking-to-bring-vibe-coding-to-hardware/",
+    "https://techcrunch.com/2026/05/16/marketing-operating-system-nectar-social-raises-30m-series-a-in-round-led-by-menlo/",
     "https://www.eu-startups.com/2026/05/ai-for-the-workers-it-cant-replace-italys-gyver-raises-e1-4-million-to-empower-electricians/",
     "https://www.eu-startups.com/2026/05/barcelonas-dolfin-raises-e2-1-million-seed-round-to-scale-its-ai-native-platform-for-sales-compensation/",
     "https://www.eu-startups.com/2026/05/belgiums-holmes-launches-with-e1-1-million-pre-seed-to-catch-software-bugs-before-they-reach-users/",
@@ -32,10 +33,6 @@
   ],
   "blacklist_domains": [],
   "seen_companies": [
-    {
-      "company": "Moritz",
-      "date_seen": "2026-05-09"
-    },
     {
       "company": "Cellply",
       "date_seen": "2026-05-11"
@@ -151,6 +148,10 @@
     {
       "company": "Multiverse",
       "date_seen": "2026-05-16"
+    },
+    {
+      "company": "Nectar Social",
+      "date_seen": "2026-05-17"
     }
   ],
   "preferences": {
@@ -162,5 +163,5 @@
       "pharmaceutical"
     ]
   },
-  "last_run": "2026-05-16T08:05:01.396197+00:00"
+  "last_run": "2026-05-17T08:22:18.371322+00:00"
 }
