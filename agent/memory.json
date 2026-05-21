@@ -12,6 +12,10 @@
     "https://techcrunch.com/2026/05/19/from-teen-hacker-to-iron-dome-researcher-this-founder-raised-28m-to-fight-ai-phishing/",
     "https://techcrunch.com/2026/05/19/gamified-social-media-network-status-announces-17m-funding-to-help-usher-in-new-era-of-social-networking/",
     "https://techcrunch.com/2026/05/19/legal-tech-announced-stilta-announces-10m-seed-backed-by-yc-and-a16z-months-after-launch/",
+    "https://techcrunch.com/2026/05/20/clouted-wants-to-take-the-guesswork-out-of-making-short-videos-go-viral/",
+    "https://techcrunch.com/2026/05/20/imperagen-raises-5-million-to-redefine-enzyme-engineering/",
+    "https://techcrunch.com/2026/05/20/irisgo-a-startup-backed-by-andrew-ng-looks-to-become-the-ai-desktop-buddy-you-never-knew-you-needed/",
+    "https://techcrunch.com/2026/05/20/nanoclaw-creator-turns-down-20m-buyout-offer-raises-12m-seed-instead/",
     "https://www.eu-startups.com/2026/05/ai-coworker-startup-viktor-raises-e64-7-million-series-a-after-hitting-e12-9-million-revenue-run-rate-within-10-weeks-of-launch/",
     "https://www.eu-startups.com/2026/05/ai-for-the-workers-it-cant-replace-italys-gyver-raises-e1-4-million-to-empower-electricians/",
     "https://www.eu-startups.com/2026/05/barcelonas-dolfin-raises-e2-1-million-seed-round-to-scale-its-ai-native-platform-for-sales-compensation/",
@@ -30,6 +34,7 @@
     "https://www.eu-startups.com/2026/05/londons-fifth-dimension-raises-e22-million-to-scale-ai-powered-decision-intelligence-for-real-assets/",
     "https://www.eu-startups.com/2026/05/londons-panta-raises-e3-4-million-to-modernise-how-financial-indices-are-built-and-managed/",
     "https://www.eu-startups.com/2026/05/malmo-based-salt-launches-crowdfunding-campaign/",
+    "https://www.eu-startups.com/2026/05/manchester-imperagen-raises-e5-8-million-seed-to-scale-ai-and-quantum-powered-enzyme-engineering/",
     "https://www.eu-startups.com/2026/05/pragues-zerops-raises-e1-7-million-to-close-the-gap-between-development-and-production-in-cloud-infrastructure/",
     "https://www.eu-startups.com/2026/05/rotterdams-ditto-raises-e7-6-million-to-make-what-did-the-doctor-say-easier-to-answer/",
     "https://www.eu-startups.com/2026/05/slovenias-ddd-invoices-secures-e1-31-million-to-tackle-fragmented-global-e-invoicing-compliance/",
@@ -43,23 +48,13 @@
     "https://www.uktech.news/ai/rightbrain-secures-3m-to-help-service-businesses-become-ai-native-20260519",
     "https://www.uktech.news/ai/searchable-secures-10-3m-to-boost-its-ai-performance-marketing-platform-20260518",
     "https://www.uktech.news/cloud/greenpixie-raises-4-7m-to-decarbonise-cloud-and-ai-data-centres-20260518",
+    "https://www.uktech.news/cybersecurity/infrawatch-raises-2-2m-to-build-new-category-of-cybersecurity-platform-20260520",
     "https://www.uktech.news/education/edtech-unicorn-multiverse-raises-50m-20260515",
-    "https://www.uktech.news/funding/esk-secures-2-6m-to-accelerate-its-live-entertainment-business-20260511"
+    "https://www.uktech.news/funding/esk-secures-2-6m-to-accelerate-its-live-entertainment-business-20260511",
+    "https://www.uktech.news/medtech/tympahealth-secures-2m-to-scale-ear-and-hearing-health-tech-20260521"
   ],
   "blacklist_domains": [],
   "seen_companies": [
-    {
-      "company": "Gyver",
-      "date_seen": "2026-05-13"
-    },
-    {
-      "company": "DesignVerse",
-      "date_seen": "2026-05-13"
-    },
-    {
-      "company": "Webidoo",
-      "date_seen": "2026-05-13"
-    },
     {
       "company": "Saile",
       "date_seen": "2026-05-14"
@@ -183,6 +178,34 @@
     {
       "company": "Qurie",
       "date_seen": "2026-05-20"
+    },
+    {
+      "company": "Imperagen",
+      "date_seen": "2026-05-21"
+    },
+    {
+      "company": "Clouted",
+      "date_seen": "2026-05-21"
+    },
+    {
+      "company": "NanoCo",
+      "date_seen": "2026-05-21"
+    },
+    {
+      "company": "IrisGo",
+      "date_seen": "2026-05-21"
+    },
+    {
+      "company": "Imperagen",
+      "date_seen": "2026-05-21"
+    },
+    {
+      "company": "TympaHealth",
+      "date_seen": "2026-05-21"
+    },
+    {
+      "company": "Infrawatch",
+      "date_seen": "2026-05-21"
     }
   ],
   "preferences": {
@@ -194,5 +217,5 @@
       "pharmaceutical"
     ]
   },
-  "last_run": "2026-05-20T09:34:57.371941+00:00"
+  "last_run": "2026-05-21T09:41:37.893223+00:00"
 }
