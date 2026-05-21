@@ -1,8 +1,5 @@
-node_modules/
-dist/
 .env
 agent/.env
 agent/.venv/
-playwright-profile/
-test-results/
-coverage/
+__pycache__/
+*.pyc
