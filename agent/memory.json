@@ -16,6 +16,8 @@
     "https://techcrunch.com/2026/05/20/imperagen-raises-5-million-to-redefine-enzyme-engineering/",
     "https://techcrunch.com/2026/05/20/irisgo-a-startup-backed-by-andrew-ng-looks-to-become-the-ai-desktop-buddy-you-never-knew-you-needed/",
     "https://techcrunch.com/2026/05/20/nanoclaw-creator-turns-down-20m-buyout-offer-raises-12m-seed-instead/",
+    "https://techcrunch.com/2026/05/21/a-new-fragrance-company-raises-2-million-to-find-new-scent-molecules/",
+    "https://techcrunch.com/2026/05/21/hark-raises-700m-series-a-for-its-secretive-universal-ai-interface/",
     "https://www.eu-startups.com/2026/05/ai-coworker-startup-viktor-raises-e64-7-million-series-a-after-hitting-e12-9-million-revenue-run-rate-within-10-weeks-of-launch/",
     "https://www.eu-startups.com/2026/05/ai-for-the-workers-it-cant-replace-italys-gyver-raises-e1-4-million-to-empower-electricians/",
     "https://www.eu-startups.com/2026/05/barcelonas-dolfin-raises-e2-1-million-seed-round-to-scale-its-ai-native-platform-for-sales-compensation/",
@@ -28,6 +30,7 @@
     "https://www.eu-startups.com/2026/05/frances-mantle8-raises-e31-million-to-fund-the-worlds-most-advanced-natural-hydrogen-exploration-and-drilling-campaign/",
     "https://www.eu-startups.com/2026/05/freiburgs-qurie-secures-e2-2-million-to-develop-economically-viable-refrigeration-systems-without-compressors-or-refrigerants/",
     "https://www.eu-startups.com/2026/05/ghent-based-exhibitly-raises-e1-4-million-to-bring-ai-personalisation-to-b2b-events/",
+    "https://www.eu-startups.com/2026/05/ghent-based-harmoney-secures-e10-million-to-scale-ai-driven-counterparty-risk-management-platform/",
     "https://www.eu-startups.com/2026/05/index-ventures-backed-adfin-raises-e15-3-million-to-help-businesses-automate-revenue-collection-with-ai/",
     "https://www.eu-startups.com/2026/05/italian-ai-company-webidoo-secures-e21-million-to-scale-smb-focused-automation-platform/",
     "https://www.eu-startups.com/2026/05/londons-dessn-raises-e5-million-to-help-product-teams-design-and-prototype-inside-real-codebases/",
@@ -35,6 +38,8 @@
     "https://www.eu-startups.com/2026/05/londons-panta-raises-e3-4-million-to-modernise-how-financial-indices-are-built-and-managed/",
     "https://www.eu-startups.com/2026/05/malmo-based-salt-launches-crowdfunding-campaign/",
     "https://www.eu-startups.com/2026/05/manchester-imperagen-raises-e5-8-million-seed-to-scale-ai-and-quantum-powered-enzyme-engineering/",
+    "https://www.eu-startups.com/2026/05/munich-based-clearops-raises-e8-6-million-series-a-to-build-ai-operating-system-for-industrial-after-sales/",
+    "https://www.eu-startups.com/2026/05/norways-roboxi-lands-e13-million-to-transform-airport-airside-operations-with-automation-and-robotics/",
     "https://www.eu-startups.com/2026/05/pragues-zerops-raises-e1-7-million-to-close-the-gap-between-development-and-production-in-cloud-infrastructure/",
     "https://www.eu-startups.com/2026/05/rotterdams-ditto-raises-e7-6-million-to-make-what-did-the-doctor-say-easier-to-answer/",
     "https://www.eu-startups.com/2026/05/slovenias-ddd-invoices-secures-e1-31-million-to-tackle-fragmented-global-e-invoicing-compliance/",
@@ -55,26 +60,6 @@
   ],
   "blacklist_domains": [],
   "seen_companies": [
-    {
-      "company": "Saile",
-      "date_seen": "2026-05-14"
-    },
-    {
-      "company": "Elvy",
-      "date_seen": "2026-05-14"
-    },
-    {
-      "company": "DDD Invoices",
-      "date_seen": "2026-05-14"
-    },
-    {
-      "company": "Mantle8",
-      "date_seen": "2026-05-14"
-    },
-    {
-      "company": "Dolfin",
-      "date_seen": "2026-05-14"
-    },
     {
       "company": "Atech",
       "date_seen": "2026-05-15"
@@ -206,6 +191,26 @@
     {
       "company": "Infrawatch",
       "date_seen": "2026-05-21"
+    },
+    {
+      "company": "Patina",
+      "date_seen": "2026-05-22"
+    },
+    {
+      "company": "Hark",
+      "date_seen": "2026-05-22"
+    },
+    {
+      "company": "Roboxi",
+      "date_seen": "2026-05-22"
+    },
+    {
+      "company": "Harmoney",
+      "date_seen": "2026-05-22"
+    },
+    {
+      "company": "ClearOps",
+      "date_seen": "2026-05-22"
     }
   ],
   "preferences": {
@@ -217,5 +222,5 @@
       "pharmaceutical"
     ]
   },
-  "last_run": "2026-05-21T09:41:37.893223+00:00"
+  "last_run": "2026-05-22T09:41:19.720079+00:00"
 }
