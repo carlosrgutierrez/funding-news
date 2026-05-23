@@ -18,6 +18,7 @@
     "https://techcrunch.com/2026/05/20/nanoclaw-creator-turns-down-20m-buyout-offer-raises-12m-seed-instead/",
     "https://techcrunch.com/2026/05/21/a-new-fragrance-company-raises-2-million-to-find-new-scent-molecules/",
     "https://techcrunch.com/2026/05/21/hark-raises-700m-series-a-for-its-secretive-universal-ai-interface/",
+    "https://techcrunch.com/2026/05/22/meta-quietly-launches-a-new-reddit-like-app-called-forum/",
     "https://www.eu-startups.com/2026/05/ai-coworker-startup-viktor-raises-e64-7-million-series-a-after-hitting-e12-9-million-revenue-run-rate-within-10-weeks-of-launch/",
     "https://www.eu-startups.com/2026/05/ai-for-the-workers-it-cant-replace-italys-gyver-raises-e1-4-million-to-empower-electricians/",
     "https://www.eu-startups.com/2026/05/barcelonas-dolfin-raises-e2-1-million-seed-round-to-scale-its-ai-native-platform-for-sales-compensation/",
@@ -46,6 +47,7 @@
     "https://www.eu-startups.com/2026/05/swedish-energytech-startup-elvy-closes-e5-9-million-round-after-securing-e500-million-credit-facility/",
     "https://www.eu-startups.com/2026/05/uk-agribiotech-startup-resurrect-bio-closes-e8-8-million-series-a-to-develop-disease-resistant-crops/",
     "https://www.eu-startups.com/2026/05/uk-edtech-multiverse-lands-e60-million-funding-round-at-e1-8-billion-valuation/",
+    "https://www.eu-startups.com/2026/05/uk-gets-a-fresh-new-unicorn-as-beauty-and-wellness-platform-fresha-lands-e68-9-million-from-kkr/",
     "https://www.eu-startups.com/2026/05/valencia-based-fresh-people-raises-e2-6-million-to-scale-booster-its-ai-leadership-copilot/",
     "https://www.eu-startups.com/2026/05/wurzburg-based-nanostruct-raises-e2-6-million-to-detect-harmful-bacteria-in-food-within-hours/",
     "https://www.eu-startups.com/2026/05/zurich-based-avian-raises-e2-2-million-to-prevent-industrial-fires-with-always-on-ai-thermal-monitoring/",
@@ -60,34 +62,6 @@
   ],
   "blacklist_domains": [],
   "seen_companies": [
-    {
-      "company": "Atech",
-      "date_seen": "2026-05-15"
-    },
-    {
-      "company": "Synthetic",
-      "date_seen": "2026-05-15"
-    },
-    {
-      "company": "Xpanner",
-      "date_seen": "2026-05-15"
-    },
-    {
-      "company": "Fresh People",
-      "date_seen": "2026-05-15"
-    },
-    {
-      "company": "PANTA",
-      "date_seen": "2026-05-15"
-    },
-    {
-      "company": "Resurrect Bio",
-      "date_seen": "2026-05-15"
-    },
-    {
-      "company": "Zerops",
-      "date_seen": "2026-05-15"
-    },
     {
       "company": "Elephant Company",
       "date_seen": "2026-05-16"
@@ -211,6 +185,14 @@
     {
       "company": "ClearOps",
       "date_seen": "2026-05-22"
+    },
+    {
+      "company": "Fresha",
+      "date_seen": "2026-05-23"
+    },
+    {
+      "company": "Meta",
+      "date_seen": "2026-05-23"
     }
   ],
   "preferences": {
@@ -222,5 +204,5 @@
       "pharmaceutical"
     ]
   },
-  "last_run": "2026-05-22T09:41:19.720079+00:00"
+  "last_run": "2026-05-23T08:28:02.855078+00:00"
 }
