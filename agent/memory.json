@@ -46,6 +46,7 @@
     "https://www.eu-startups.com/2026/05/rotterdams-ditto-raises-e7-6-million-to-make-what-did-the-doctor-say-easier-to-answer/",
     "https://www.eu-startups.com/2026/05/slovenias-ddd-invoices-secures-e1-31-million-to-tackle-fragmented-global-e-invoicing-compliance/",
     "https://www.eu-startups.com/2026/05/swedish-energytech-startup-elvy-closes-e5-9-million-round-after-securing-e500-million-credit-facility/",
+    "https://www.eu-startups.com/2026/05/tequipy-founded-by-revoluts-former-it-chief-raises-over-e3-million-to-automate-global-device-logistics/",
     "https://www.eu-startups.com/2026/05/uk-agribiotech-startup-resurrect-bio-closes-e8-8-million-series-a-to-develop-disease-resistant-crops/",
     "https://www.eu-startups.com/2026/05/uk-edtech-multiverse-lands-e60-million-funding-round-at-e1-8-billion-valuation/",
     "https://www.eu-startups.com/2026/05/uk-gets-a-fresh-new-unicorn-as-beauty-and-wellness-platform-fresha-lands-e68-9-million-from-kkr/",
@@ -63,10 +64,6 @@
   ],
   "blacklist_domains": [],
   "seen_companies": [
-    {
-      "company": "Nectar Social",
-      "date_seen": "2026-05-17"
-    },
     {
       "company": "Salt & Fiber",
       "date_seen": "2026-05-18"
@@ -186,6 +183,10 @@
     {
       "company": "SolarSquare",
       "date_seen": "2026-05-24"
+    },
+    {
+      "company": "Tequipy",
+      "date_seen": "2026-05-25"
     }
   ],
   "preferences": {
@@ -197,5 +198,5 @@
       "pharmaceutical"
     ]
   },
-  "last_run": "2026-05-24T08:39:54.817050+00:00"
+  "last_run": "2026-05-25T10:23:13.600138+00:00"
 }
